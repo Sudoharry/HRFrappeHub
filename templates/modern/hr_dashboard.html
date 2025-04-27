@@ -134,7 +134,7 @@
                 <li><a class="dropdown-item" href="#">May 2025</a></li>
             </ul>
         </div>
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <a href="/reports/employee" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
             <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
         </a>
     </div>
@@ -199,7 +199,7 @@
                             Pending Leave Requests</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
                         <div class="small text-primary mt-2">
-                            <a href="#">View all</a>
+                            <a href="/leave/pending-approvals">View all</a>
                         </div>
                     </div>
                 </div>
@@ -220,7 +220,7 @@
                             Open Job Positions</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">8</div>
                         <div class="small text-primary mt-2">
-                            <a href="#">Manage jobs</a>
+                            <a href="/recruitment/job-openings">Manage jobs</a>
                         </div>
                     </div>
                 </div>
@@ -242,10 +242,10 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
                         <div class="dropdown-header">Chart Options:</div>
-                        <a class="dropdown-item" href="#">Export as image</a>
-                        <a class="dropdown-item" href="#">View detailed report</a>
+                        <a class="dropdown-item" href="/reports/employee">Export as image</a>
+                        <a class="dropdown-item" href="/reports/employee">View detailed report</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Add department</a>
+                        <a class="dropdown-item" href="/employees/department">Add department</a>
                     </div>
                 </div>
             </div>
@@ -357,10 +357,10 @@
                                 <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="attendanceDropdown">
-                                <a class="dropdown-item" href="#">Monthly view</a>
-                                <a class="dropdown-item" href="#">Weekly view</a>
+                                <a class="dropdown-item" href="/attendance/monthly-report">Monthly view</a>
+                                <a class="dropdown-item" href="/attendance/daily-status">Weekly view</a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#">Export data</a>
+                                <a class="dropdown-item" href="/reports/attendance">Export data</a>
                             </div>
                         </div>
                     </div>
@@ -375,8 +375,9 @@
             <div class="col-md-6">
                 <!-- Recent Employees -->
                 <div class="card shadow mb-4">
-                    <div class="card-header py-3">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                         <h6 class="m-0 font-weight-bold text-primary">Recent Hires</h6>
+                        <a href="/employees" class="btn btn-sm btn-outline-primary">View all employees</a>
                     </div>
                     <div class="card-body">
                         <div class="recent-employees-table">
