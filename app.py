@@ -865,6 +865,7 @@ def notifications_list():
     
     return render_template('modern/notifications.html', 
                            notifications=notifications,
+                           now=datetime.now(),
                            title='Notifications')
 
 @app.route('/notifications/view/<int:notification_id>')
@@ -908,6 +909,7 @@ def view_notification(notification_id):
     
     return render_template('modern/notification_detail.html', 
                            notification=notification,
+                           now=datetime.now(),
                            title='Notification Detail')
 
 # Messages Routes
@@ -947,6 +949,7 @@ def messages_list():
     
     return render_template('modern/messages.html', 
                            messages=messages,
+                           now=datetime.now(),
                            title='Messages')
 
 @app.route('/messages/view/<int:message_id>')
@@ -981,6 +984,7 @@ def view_message(message_id):
     
     return render_template('modern/message_detail.html', 
                            message=message,
+                           now=datetime.now(),
                            title='Message Detail')
 
 # Settings Routes
