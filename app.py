@@ -7,7 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize Flask app
-app = Flask(__name__)  # Use default template directory
+app = Flask(__name__, 
+            template_folder='templates')  # Explicitly set template folder
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hr-management-system-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrms.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -526,66 +527,7 @@ def get_hr_dashboard_data():
         "attendance_data": attendance_data
     })
 
-# Create a login page template
-@app.route('/create-login-template')
-def create_login_template():
-    login_html = """
-{% extends "templates/web.html" %}
 
-{% block title %}{{ _("Login") }}{% endblock %}
-
-{% block page_content %}
-<div class="login-page">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 col-md-offset-3">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">{{ _("Login") }}</h3>
-                    </div>
-                    <div class="panel-body">
-                        {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                        <div class="alert alert-danger">
-                            {% for message in messages %}
-                            {{ message }}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        {% endwith %}
-                        
-                        <form method="POST" action="{{ url_for('login') }}">
-                            <div class="form-group">
-                                <label for="username">{{ _("Username") }}</label>
-                                <input type="text" class="form-control" id="username" name="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="password">{{ _("Password") }}</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">{{ _("Login") }}</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.login-page {
-    padding: 40px 0;
-}
-</style>
-{% endblock %}
-"""
-    # Create templates directory if it doesn't exist
-    os.makedirs('hrms/www/templates', exist_ok=True)
-    
-    with open('hrms/www/login.html', 'w') as f:
-        f.write(login_html)
-    
-    return "Login template created successfully"
 
 if __name__ == '__main__':
     with app.app_context():
