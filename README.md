@@ -1,6 +1,6 @@
 # HR Management System
 
-A comprehensive HR Management System built with Flask and PostgreSQL, designed to provide a seamless and interactive employee experience.
+A comprehensive HR Management System built on the Frappe/ERPNext framework, designed to provide a seamless and interactive employee experience with a robust DocType-based structure.
 
 ![HR Management System](generated-icon.png)
 
@@ -12,8 +12,11 @@ A comprehensive HR Management System built with Flask and PostgreSQL, designed t
   - [Prerequisites](#prerequisites)
   - [Local Development](#local-development)
   - [Using Docker](#using-docker)
+  - [Using Docker Compose](#using-docker-compose)
 - [Environment Variables](#environment-variables)
 - [Database Setup](#database-setup)
+  - [MariaDB Configuration](#mariadb-configuration)
+  - [Migration from PostgreSQL](#migration-from-postgresql)
 - [Project Structure](#project-structure)
 - [Core Functionalities](#core-functionalities)
 - [API Documentation](#api-documentation)
@@ -34,15 +37,16 @@ A comprehensive HR Management System built with Flask and PostgreSQL, designed t
 
 ## Technology Stack
 
-- **Backend**: Python 3.11 with Flask framework
-- **Frontend**: HTML5, CSS3, JavaScript with Bootstrap 5
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Authentication**: Flask-Login
+- **Backend Framework**: Frappe with Flask compatibility layer
+- **Frontend**: HTML5, CSS3, JavaScript with Bootstrap 5 and Frappe UI components
+- **Database**: MariaDB (PostgreSQL support during migration)
+- **ORM**: Frappe ORM with SQLAlchemy bridge
+- **Authentication**: Frappe User System with Flask-Login compatibility
 - **Web Server**: Gunicorn (Production)
 - **Additional Libraries**:
-  - Flask-SocketIO for real-time updates
-  - Flask-WTF for form handling
+  - Frappe Framework for document management and business logic
+  - Flask-SQLAlchemy for database operations during migration
+  - WebSocket support for real-time updates
   - Python-dotenv for environment variables
 
 ## Installation
@@ -50,7 +54,8 @@ A comprehensive HR Management System built with Flask and PostgreSQL, designed t
 ### Prerequisites
 
 - Python 3.11 or higher
-- PostgreSQL
+- MariaDB (or PostgreSQL during migration)
+- Node.js 16+ (for Frappe frontend assets)
 - pip (Python package manager)
 
 ### Local Development
@@ -69,7 +74,7 @@ source venv/bin/activate  # On Windows, use: venv\Scripts\activate
 
 3. Install dependencies
 ```bash
-pip install .
+pip install -r requirements.txt
 ```
 
 4. Set up environment variables
@@ -80,12 +85,15 @@ cp .env.example .env
 
 5. Initialize the database
 ```bash
+# If using MariaDB (recommended)
+python setup.py --init-db
+# If still using PostgreSQL during migration
 python -c "from app import db; db.create_all()"
 ```
 
 6. Run the development server
 ```bash
-flask run
+flask run --host=0.0.0.0 --port=5000
 ```
 
 ### Using Docker
@@ -100,55 +108,118 @@ docker build -t hr-management-system .
 docker run -p 5000:5000 --env-file .env hr-management-system
 ```
 
+### Using Docker Compose
+
+For a complete development or production environment with MariaDB:
+
+1. Make sure Docker and Docker Compose are installed
+
+2. Launch the application stack
+```bash
+docker-compose up -d
+```
+
+3. Access the application at http://localhost:5000
+
 ## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
 ```
-FLASK_APP=app.py
+# Application configuration
+FLASK_APP=app_frappe.py
 FLASK_ENV=development
 FLASK_DEBUG=1
-DATABASE_URL=postgresql://username:password@localhost:5432/hrdb
 SECRET_KEY=your_secret_key
+
+# Database configuration (PostgreSQL for migration)
+DATABASE_URL=postgresql://username:password@localhost:5432/hrdb
+
+# Database configuration (MariaDB for Frappe)
+DB_HOST=mariadb
+DB_NAME=hrms
+DB_USER=frappe
+DB_PASSWORD=frappe_password
+DB_ROOT_PASSWORD=mariadb_root_password
+DB_PORT=3306
+
+# Frappe configuration
+FRAPPE_SITE_NAME=hrms.localhost
+ADMIN_PASSWORD=admin_password
 ```
 
 ## Database Setup
 
-The system uses PostgreSQL as the database. You need to create a PostgreSQL database and set the `DATABASE_URL` environment variable.
+### MariaDB Configuration
+
+The system is migrating to MariaDB for Frappe compatibility. Set up MariaDB using the following commands:
 
 ```sql
-CREATE DATABASE hrdb;
-CREATE USER hruser WITH PASSWORD 'password';
-GRANT ALL PRIVILEGES ON DATABASE hrdb TO hruser;
+CREATE DATABASE hrms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'frappe'@'%' IDENTIFIED BY 'frappe_password';
+GRANT ALL PRIVILEGES ON hrms.* TO 'frappe'@'%';
+FLUSH PRIVILEGES;
 ```
+
+### Migration from PostgreSQL
+
+If you're migrating from the previous PostgreSQL database, use the provided migration script:
+
+```bash
+python migrate_db.py --source postgresql --target mariadb
+```
+
+This script will:
+1. Export data from PostgreSQL
+2. Transform it to match the Frappe data model
+3. Import it into MariaDB with proper validation
 
 ## Project Structure
 
 ```
 hr-management-system/
-├── app.py                  # Main application file
-├── models.py               # Database models (included in app.py)
-├── templates/              # HTML templates
-│   ├── modern/            # Modern UI templates
-│   │   ├── base.html      # Base template with navigation
-│   │   ├── hr_dashboard.html  # HR dashboard template
-│   │   ├── employee_portal.html  # Employee portal
-│   │   ├── login.html     # Login page
-│   │   └── ... (other templates)
-├── static/                # Static files (CSS, JS, images)
+├── app.py                  # Flask application file (during migration)
+├── app_frappe.py           # Main Frappe application entry point
+├── fixed_app.py            # Enhanced Flask app with Frappe hooks
+├── frappe_compat.py        # Compatibility layer for Frappe/Flask
+├── frappe_init.py          # Frappe initialization utilities
+├── hooks.py                # Frappe hooks definition
+├── templates/              # Frappe templates
+│   ├── includes/          # Partial templates for inclusion
+│   │   └── job_opening_row.html # Job opening card template
+│   ├── pages/             # Page templates
+│   │   ├── jobs.html      # Job listings page
+│   │   └── job_application.html # Job application form
+│   └── web.html           # Base web template
+├── hrms/                   # Application module (Frappe style)
+│   ├── api.py             # API endpoints
+│   ├── hr/                # HR module
+│   │   └── doctype/       # HR DocTypes
+│   │       ├── employee/  # Employee doctype
+│   │       │   ├── employee.py  # Employee controller
+│   │       │   └── employee.json # Employee schema
+│   │       ├── attendance/ # Attendance doctype
+│   │       ├── leave_application/ # Leave application doctype
+│   │       └── leave_type/ # Leave type doctype
+│   ├── payroll/           # Payroll module
+│   │   └── doctype/       # Payroll DocTypes
+│   │       ├── salary_structure/ # Salary structure doctype
+│   │       └── salary_slip/ # Salary slip doctype
+│   └── recruitment/       # Recruitment module
+│       └── doctype/       # Recruitment DocTypes
+│           ├── job_opening/ # Job opening doctype
+│           └── job_applicant/ # Job applicant doctype
+├── frappe-bench/          # Frappe bench directory (for bench tooling)
+├── static/                # Static assets
 │   ├── css/               # CSS stylesheets
 │   ├── js/                # JavaScript files
 │   └── img/               # Images
-├── instance/              # Instance-specific files
-│   └── hrms.db            # SQLite database (development only)
-├── hrms/                  # Module directory
-│   ├── api.py             # API functions
-│   ├── hooks.py           # Event hooks
-│   ├── hrms_controller.py # Controller functions
-│   └── ... (other module files)
-├── Dockerfile             # Docker configuration
+├── migrate_db.py          # Database migration utility
+├── docker-compose.yml     # Docker Compose configuration
+├── Dockerfile             # Production-ready Docker configuration
+├── MIGRATION_PLAN.md      # Migration strategy documentation
 ├── pyproject.toml         # Project dependencies
-├── uv.lock                # Package lock file
+├── requirements.txt       # Explicit dependencies list
 └── README.md              # Project documentation
 ```
 
@@ -196,19 +267,50 @@ hr-management-system/
 
 ## API Documentation
 
-The system provides two main API endpoints:
+The system provides RESTful and WebSocket API endpoints following Frappe standards:
 
-### Employee Dashboard Data
+### Core Data Endpoints
+
+#### Employee Dashboard Data
 ```
-GET /api/employee-dashboard-data
+GET /api/method/hrms.api.get_employee_dashboard_data
 ```
 Returns data for the employee dashboard including attendance summary, leave balance, recent activities, etc.
 
-### HR Dashboard Data
+#### HR Dashboard Data
 ```
-GET /api/hr-dashboard-data
+GET /api/method/hrms.api.get_hr_dashboard_data
 ```
 Returns data for the HR dashboard including employee count, attendance data, pending leave applications, open job positions, etc.
+
+### DocType API Endpoints
+
+All Frappe DocTypes expose standard REST endpoints:
+
+```
+GET /api/resource/{doctype}                # List all documents of a DocType
+POST /api/resource/{doctype}               # Create a new document
+GET /api/resource/{doctype}/{name}         # Get a specific document
+PUT /api/resource/{doctype}/{name}         # Update a document
+DELETE /api/resource/{doctype}/{name}      # Delete a document
+```
+
+### WebSocket Notifications
+
+Real-time updates are delivered through WebSocket connections:
+
+```
+WebSocket: /ws
+```
+
+Clients can subscribe to document changes with:
+```javascript
+socket.send(JSON.stringify({
+  cmd: "subscribe",
+  doctype: "DocType",
+  name: "document_name"
+}));
+```
 
 ## Contributing
 
