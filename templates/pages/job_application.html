@@ -1,0 +1,282 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Apply for") }} {{ job_opening.job_title }}{% endblock %}
+
+{% block page_content %}
+<section class="job-application-section py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ frappe.get_url('/jobs') }}">{{ _("Job Openings") }}</a></li>
+                        <li class="breadcrumb-item"><a href="{{ frappe.get_url('/jobs/{0}'.format(job_opening.name)) }}">{{ job_opening.job_title }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ _("Apply") }}</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="job-application-form bg-white p-4 rounded shadow-sm">
+                    <h2 class="form-title mb-4">{{ _("Apply for {0}").format(job_opening.job_title) }}</h2>
+                    
+                    {% if frappe.session.user == 'Guest' %}
+                    <div class="alert alert-info mb-4" role="alert">
+                        <i class="fa fa-info-circle me-2"></i>
+                        {{ _("Already have an account?") }} <a href="{{ frappe.get_url('/login?redirect-to={0}'.format(frappe.request.path)) }}" class="alert-link">{{ _("Login") }}</a> {{ _("to auto-fill your profile details.") }}
+                    </div>
+                    {% endif %}
+                    
+                    <form id="job-application-form">
+                        <!-- CSRF Token - For security -->
+                        <input type="hidden" name="csrf_token" value="{{ frappe.session.csrf_token }}">
+                        <input type="hidden" name="job_opening" value="{{ job_opening.name }}">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="applicant_name" class="form-label">{{ _("Full Name") }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="applicant_name" name="applicant_name" required 
+                                       value="{{ frappe.db.get_value('Employee', {'user_id': frappe.session.user}, 'employee_name') if frappe.session.user != 'Guest' else '' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">{{ _("Email Address") }} <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required
+                                       value="{{ frappe.db.get_value('User', frappe.session.user, 'email') if frappe.session.user != 'Guest' else '' }}">
+                                <div class="form-text">{{ _("We'll never share your email with anyone else.") }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">{{ _("Phone Number") }}</label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number"
+                                       value="{{ frappe.db.get_value('Employee', {'user_id': frappe.session.user}, 'cell_number') if frappe.session.user != 'Guest' else '' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="source" class="form-label">{{ _("How did you hear about us?") }}</label>
+                                <select class="form-select" id="source" name="source">
+                                    <option value="Website">{{ _("Company Website") }}</option>
+                                    <option value="Job Portal">{{ _("Job Portal") }}</option>
+                                    <option value="Social Media">{{ _("Social Media") }}</option>
+                                    <option value="Employee Referral">{{ _("Employee Referral") }}</option>
+                                    <option value="Employer Referral">{{ _("Employer Referral") }}</option>
+                                    <option value="Walk In">{{ _("Walk In") }}</option>
+                                    <option value="Other">{{ _("Other") }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 source-details d-none">
+                            <label for="source_name" class="form-label">{{ _("Please specify") }}</label>
+                            <input type="text" class="form-control" id="source_name" name="source_name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="resume_attachment" class="form-label">{{ _("Resume/CV") }} <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="resume_attachment" name="resume_attachment" accept=".pdf,.doc,.docx" required>
+                            <div class="form-text">{{ _("Accepted formats: PDF, DOC, DOCX. Maximum size: 5MB.") }}</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="cover_letter" class="form-label">{{ _("Cover Letter / Introduction") }}</label>
+                            <textarea class="form-control" id="cover_letter" name="cover_letter" rows="5" placeholder="{{ _('Tell us why you\'re interested in this position and what makes you a good fit...') }}"></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5 class="form-section-title mb-3">{{ _("Skills & Experience") }}</h5>
+                            
+                            <div id="skills-container">
+                                <div class="row skill-row mb-2">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" name="skills[][skill]" placeholder="{{ _('Skill (e.g. Python, Project Management)') }}">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <select class="form-select" name="skills[][proficiency]">
+                                            <option value="">{{ _("-- Select Proficiency --") }}</option>
+                                            <option value="Beginner">{{ _("Beginner") }}</option>
+                                            <option value="Intermediate">{{ _("Intermediate") }}</option>
+                                            <option value="Advanced">{{ _("Advanced") }}</option>
+                                            <option value="Expert">{{ _("Expert") }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger remove-skill"><i class="fa fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" id="add-skill" class="btn btn-outline-secondary btn-sm mt-2">
+                                <i class="fa fa-plus me-1"></i> {{ _("Add Another Skill") }}
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="consent" name="consent" required>
+                                <label class="form-check-label" for="consent">
+                                    {{ _("I consent to the processing of my personal data for recruitment purposes.") }} <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submit-application" class="btn btn-primary btn-lg">
+                                <i class="fa fa-paper-plane me-2"></i> {{ _("Submit Application") }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="job-summary bg-white p-4 rounded shadow-sm mb-4">
+                    <h4 class="summary-title mb-3">{{ _("Job Summary") }}</h4>
+                    <div class="summary-detail mb-3">
+                        <div class="row mb-2">
+                            <div class="col-1"><i class="fa fa-building text-muted"></i></div>
+                            <div class="col-11">
+                                <strong>{{ _("Department") }}:</strong>
+                                <span>{{ job_opening.department or _("Not Specified") }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-1"><i class="fa fa-id-badge text-muted"></i></div>
+                            <div class="col-11">
+                                <strong>{{ _("Position") }}:</strong>
+                                <span>{{ job_opening.designation or _("Not Specified") }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-1"><i class="fa fa-calendar text-muted"></i></div>
+                            <div class="col-11">
+                                <strong>{{ _("Deadline") }}:</strong>
+                                <span class="{{ 'text-danger' if frappe.utils.getdate(job_opening.application_deadline) <= frappe.utils.getdate(frappe.utils.nowdate()) + frappe.utils.datetime.timedelta(days=3) else '' }}">
+                                    {{ frappe.utils.format_date(job_opening.application_deadline) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="application-tips bg-light p-4 rounded shadow-sm">
+                    <h4 class="tips-title mb-3">{{ _("Application Tips") }}</h4>
+                    <ul class="tips-list">
+                        <li class="mb-2">{{ _("Tailor your resume to highlight skills relevant to this position.") }}</li>
+                        <li class="mb-2">{{ _("Be concise and specific about your achievements.") }}</li>
+                        <li class="mb-2">{{ _("Proofread your application for any errors before submitting.") }}</li>
+                        <li>{{ _("Follow up if you don't hear back within two weeks.") }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block script %}
+<script>
+    frappe.ready(function() {
+        // Show/hide source details based on source selection
+        $("#source").on("change", function() {
+            var source = $(this).val();
+            if (source === "Employee Referral" || source === "Employer Referral" || source === "Job Portal" || source === "Other") {
+                $(".source-details").removeClass("d-none");
+            } else {
+                $(".source-details").addClass("d-none");
+                $("#source_name").val("");
+            }
+        });
+        
+        // Add skill row
+        $("#add-skill").on("click", function() {
+            var skillRow = `
+                <div class="row skill-row mb-2">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="skills[][skill]" placeholder="{{ _('Skill (e.g. Python, Project Management)') }}">
+                    </div>
+                    <div class="col-md-5">
+                        <select class="form-select" name="skills[][proficiency]">
+                            <option value="">{{ _("-- Select Proficiency --") }}</option>
+                            <option value="Beginner">{{ _("Beginner") }}</option>
+                            <option value="Intermediate">{{ _("Intermediate") }}</option>
+                            <option value="Advanced">{{ _("Advanced") }}</option>
+                            <option value="Expert">{{ _("Expert") }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger remove-skill"><i class="fa fa-times"></i></button>
+                    </div>
+                </div>
+            `;
+            $("#skills-container").append(skillRow);
+        });
+        
+        // Remove skill row
+        $(document).on("click", ".remove-skill", function() {
+            $(this).closest(".skill-row").remove();
+        });
+        
+        // Handle form submission
+        $("#job-application-form").on("submit", function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            $("#submit-application").prop("disabled", true).html('<i class="fa fa-spinner fa-spin me-2"></i> {{ _("Submitting...") }}');
+            
+            // Validate file size
+            var resumeFile = $("#resume_attachment")[0].files[0];
+            if (resumeFile && resumeFile.size > 5 * 1024 * 1024) {
+                frappe.msgprint("{{ _('Resume file size exceeds 5MB limit') }}");
+                $("#submit-application").prop("disabled", false).html('<i class="fa fa-paper-plane me-2"></i> {{ _("Submit Application") }}');
+                return false;
+            }
+            
+            // Create FormData object to handle file upload
+            var formData = new FormData(this);
+            
+            // Submit form data using Frappe's API
+            frappe.call({
+                method: "hrms.recruitment.doctype.job_opening.job_opening.apply_for_job",
+                type: "POST", 
+                args: {
+                    job_opening: formData.get("job_opening"),
+                    applicant_name: formData.get("applicant_name"),
+                    email: formData.get("email"),
+                    cover_letter: formData.get("cover_letter"),
+                    // Resume will be handled separately
+                },
+                callback: function(response) {
+                    if (response.message && response.message.status === "success") {
+                        // Show success message and redirect
+                        frappe.show_alert({
+                            message: "{{ _('Your application has been submitted successfully!') }}",
+                            indicator: 'green'
+                        }, 5);
+                        
+                        setTimeout(function() {
+                            window.location.href = "/jobs/thank-you?id=" + response.message.applicant_id;
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        frappe.msgprint(
+                            response.message && response.message.message || 
+                            "{{ _('There was an error submitting your application. Please try again.') }}"
+                        );
+                        $("#submit-application").prop("disabled", false).html('<i class="fa fa-paper-plane me-2"></i> {{ _("Submit Application") }}');
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    frappe.msgprint("{{ _('There was an error submitting your application. Please try again.') }}");
+                    $("#submit-application").prop("disabled", false).html('<i class="fa fa-paper-plane me-2"></i> {{ _("Submit Application") }}');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

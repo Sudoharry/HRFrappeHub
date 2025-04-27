@@ -1,0 +1,35 @@
+<!-- Job Opening Row Template -->
+<div class="job-opening-card mb-4 p-4 bg-white rounded shadow-sm border">
+    <div class="d-flex justify-content-between align-items-start">
+        <h3 class="job-title mb-1">{{ job.job_title }}</h3>
+        <span class="job-deadline badge {{ 'bg-danger' if frappe.utils.getdate(job.application_deadline) <= frappe.utils.getdate(frappe.utils.nowdate()) + frappe.utils.datetime.timedelta(days=3) else 'bg-primary' }}">
+            {{ _("Deadline:") }} {{ frappe.utils.format_date(job.application_deadline) }}
+        </span>
+    </div>
+    <div class="job-meta mt-2 mb-3">
+        {% if job.department %}
+        <span class="job-department badge bg-light text-dark me-2">
+            <i class="fa fa-users me-1"></i> {{ job.department }}
+        </span>
+        {% endif %}
+        
+        {% if job.designation %}
+        <span class="job-designation badge bg-light text-dark me-2">
+            <i class="fa fa-id-badge me-1"></i> {{ job.designation }}
+        </span>
+        {% endif %}
+    </div>
+    <div class="job-description mb-3">
+        {% if job.description %}
+            {{ job.description|striptags|truncate(300) }}
+        {% endif %}
+    </div>
+    <div class="action-section d-flex justify-content-between align-items-center">
+        <a href="{{ frappe.get_url('/jobs/{0}'.format(job.name)) }}" class="btn btn-outline-primary">
+            {{ _("View Details") }}
+        </a>
+        <a href="{{ frappe.get_url('/jobs/{0}/apply'.format(job.name)) }}" class="btn btn-primary">
+            {{ _("Apply Now") }}
+        </a>
+    </div>
+</div>
