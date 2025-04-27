@@ -9,5 +9,6 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "flask-wtf>=1.2.2",
     "frappe-bench>=5.24.1",
+    "psycopg2-binary>=2.9.10",
     "werkzeug>=3.1.3",
 ]
