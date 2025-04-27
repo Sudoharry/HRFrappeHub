@@ -620,6 +620,19 @@ def employees_list():
                           active_page='employees',
                           title='Employees')
 
+@app.route('/employees/department')
+@login_required
+def department_management():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    departments = Department.query.all()
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='department_management',
+                          section='Employees',
+                          subsection='Department Management',
+                          departments=departments)
+
 @app.route('/attendance/daily-status')
 @login_required
 def attendance_daily_view():
