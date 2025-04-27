@@ -1,97 +1,152 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+"""
+Job Opening DocType Controller
+
+This module contains the controller for the Job Opening DocType
+which handles business logic and validations.
+"""
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import now_datetime, getdate, nowdate
 from frappe.website.website_generator import WebsiteGenerator
+from frappe.utils import getdate, now_datetime
 
-class JobOpening(WebsiteGenerator):
-    website = frappe._dict(
-        template = "templates/generators/job_opening.html",
-        condition_field = "publish",
-        page_title_field = "job_title",
-    )
-    
+class JobOpening(Document):
     def validate(self):
-        if not self.route:
-            self.route = "jobs/" + self.scrub(self.job_title)
-            
-        self.validate_dates()
-        self.update_status()
+        """Validate job opening"""
+        self.validate_application_deadline()
+        self.validate_min_max_salary()
+        
+        # If the job opening is closed, you can't publish it on the website
+        if self.status == "Closed" and self.publish:
+            self.publish = 0
+            frappe.msgprint(_("Automatically unpublished the Job Opening as it is now closed"))
     
-    def validate_dates(self):
-        if self.application_end_date and getdate(self.application_end_date) < getdate(nowdate()):
-            frappe.throw(_("Application End Date cannot be in the past"))
-            
-        if self.application_end_date and self.starting_date and getdate(self.application_end_date) > getdate(self.starting_date):
-            frappe.throw(_("Application End Date cannot be after Starting Date"))
+    def validate_application_deadline(self):
+        """Validate application deadline"""
+        if self.application_deadline:
+            # Application deadline cannot be in the past
+            if getdate(self.application_deadline) < getdate(now_datetime()):
+                frappe.throw(_("Application Deadline cannot be in the past"))
     
-    def update_status(self):
-        if self.application_end_date and getdate(self.application_end_date) < getdate(nowdate()):
-            self.status = "Closed"
-        elif self.status == "Closed" and (not self.application_end_date or getdate(self.application_end_date) >= getdate(nowdate())):
-            self.status = "Open"
+    def validate_min_max_salary(self):
+        """Validate min and max salary"""
+        if self.min_salary and self.max_salary:
+            if self.min_salary > self.max_salary:
+                frappe.throw(_("Minimum Salary cannot be greater than Maximum Salary"))
     
     def on_update(self):
-        self.update_website_meta()
+        """On update actions"""
+        # Update related documents or perform any other actions when the job opening is updated
+        pass
     
-    def update_website_meta(self):
-        # Update website metadata for SEO
-        self.meta_title = self.job_title
-        self.meta_description = self.description[:160] if self.description else ""
-        self.meta_keywords = ", ".join([self.job_title, self.designation, self.department, self.company])
-    
-    def get_context(self, context):
-        context.parents = [{"name": _("Jobs"), "route": "jobs"}]
+    def has_permission(self, ptype='read', user=None):
+        """Check if user has permission on this document"""
+        # Everyone can read published job openings
+        if ptype == 'read' and self.publish:
+            return True
         
-        # Add job details to context
-        context.job = self
-        return context
+        # For other actions, use standard permission system
+        return super().has_permission(ptype, user)
+
+def get_list_context(context=None):
+    """Get context for list view on website"""
+    context.update({
+        "title": _("Job Openings"),
+        "introduction": _("Current job openings"),
+        "get_list": get_published_job_openings,
+        "row_template": "hrms/templates/includes/job_opening_row.html",
+        "show_sidebar": True,
+        "show_search": True,
+        "no_breadcrumbs": True
+    })
+    return context
+
+def get_published_job_openings(doctype, txt=None, filters=None, limit_start=0, limit_page_length=20, order_by=None):
+    """Get list of published job openings for website"""
+    return frappe.get_all("Job Opening",
+        filters={
+            "status": "Open",
+            "publish": 1,
+            "application_deadline": [">=", getdate(now_datetime())]
+        },
+        fields=["name", "job_title", "department", "designation", "application_deadline", "description"],
+        limit_start=limit_start,
+        limit_page_length=limit_page_length,
+        order_by="application_deadline asc" if not order_by else order_by
+    )
+
+@frappe.whitelist(allow_guest=True)
+def apply_for_job(job_opening, applicant_name, email, cover_letter=None, resume=None):
+    """API for applying to a job opening from website"""
+    # Validate required fields
+    if not job_opening or not applicant_name or not email:
+        return {"status": "error", "message": _("Missing required fields")}
     
-    def get_applicants(self):
-        """Get applicants for this job opening"""
-        return frappe.get_all("Job Applicant", 
-            filters={
-                "job_title": self.job_title,
-                "status": ["not in", ["Rejected", "Withdrawn"]]
-            },
-            fields=["name", "applicant_name", "status", "creation"]
-        )
+    # Check if job opening exists and is open
+    job = frappe.get_doc("Job Opening", job_opening)
+    if job.status != "Open" or not job.publish:
+        return {"status": "error", "message": _("This job opening is not accepting applications")}
     
-    def create_website_page(self):
-        """Create website page for this job opening"""
-        if not self.publish:
-            return
-            
-        # In a real implementation, this might create webpage, route, etc.
-        # For Frappe framework, route handling is done by the website_generator
-        frappe.msgprint(_("Job opening published on website"))
+    # Check if application deadline has passed
+    if job.application_deadline and getdate(job.application_deadline) < getdate(now_datetime()):
+        return {"status": "error", "message": _("Application deadline has passed")}
     
-    def close_job_opening(self):
-        """Close this job opening"""
-        self.status = "Closed"
-        self.save()
+    # Create a new job applicant
+    try:
+        applicant = frappe.new_doc("Job Applicant")
+        applicant.applicant_name = applicant_name
+        applicant.email = email
+        applicant.job_opening = job_opening
+        applicant.status = "Open"
+        
+        if cover_letter:
+            applicant.cover_letter = cover_letter
+        
+        if resume:
+            # Handle resume upload if provided
+            # This would need to use Frappe's file attachment APIs
+            pass
+        
+        applicant.insert(ignore_permissions=True)
+        
+        # Send notification to HR
+        notify_hr_about_new_applicant(applicant)
+        
+        return {
+            "status": "success", 
+            "message": _("Your application has been submitted successfully"),
+            "applicant_id": applicant.name
+        }
+    except Exception as e:
+        frappe.log_error(str(e), "Job Application Error")
+        return {"status": "error", "message": _("An error occurred while submitting your application")}
+
+def notify_hr_about_new_applicant(applicant):
+    """Send notification to HR team about new applicant"""
+    subject = _("New Job Application for {0}").format(applicant.job_opening)
+    message = _("""
+        <p>A new job application has been submitted:</p>
+        <ul>
+            <li><strong>Job Opening:</strong> {0}</li>
+            <li><strong>Applicant:</strong> {1}</li>
+            <li><strong>Email:</strong> {2}</li>
+        </ul>
+        <p>Please review the application at your earliest convenience.</p>
+    """).format(applicant.job_opening, applicant.applicant_name, applicant.email)
     
-    def reopen_job_opening(self):
-        """Reopen this job opening"""
-        self.status = "Open"
-        self.save()
+    # Send notification to HR users
+    hr_users = frappe.get_all("User", 
+        filters={"role": "HR User"},
+        fields=["email"]
+    )
     
-    def notify_department_head(self):
-        """Notify department head about new job opening"""
-        if not self.department:
-            return
-            
-        department_head = frappe.db.get_value("Department", self.department, "department_head")
-        if department_head:
-            # Get user ID for department head
-            employee = frappe.db.get_value("Employee", {"name": department_head}, "user_id")
-            if employee:
-                frappe.sendmail(
-                    recipients=[employee],
-                    subject=_("New Job Opening: {0}").format(self.job_title),
-                    message=_("A new job opening has been created under your department: {0}").format(self.job_title),
-                    reference_doctype=self.doctype,
-                    reference_name=self.name
-                )
+    for user in hr_users:
+        if user.email:
+            frappe.sendmail(
+                recipients=user.email,
+                subject=subject,
+                message=message,
+                reference_doctype="Job Applicant",
+                reference_name=applicant.name
+            )

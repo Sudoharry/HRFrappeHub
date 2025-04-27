@@ -1,2 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+"""
+Recruitment Module for HRMS
+
+This module contains the recruitment DocTypes and controllers.
+"""
