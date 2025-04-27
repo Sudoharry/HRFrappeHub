@@ -1,8 +1,12 @@
 {% extends "modern/base.html" %}
 
-{% set active_page = "dashboard" %}
-
-{% block title %}HR Dashboard - HR Management System{% endblock %}
+{% block title %}
+    {% if title %}
+        {{ title }} - HR Management System
+    {% else %}
+        HR Dashboard - HR Management System
+    {% endif %}
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -113,7 +117,12 @@
 {% block content %}
 <!-- Page Heading -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">HR Dashboard</h1>
+    {% if section and subsection %}
+        <h1 class="h3 mb-0 text-gray-800">{{ section }} <small class="text-muted">/ {{ subsection }}</small></h1>
+    {% else %}
+        <h1 class="h3 mb-0 text-gray-800">HR Dashboard</h1>
+    {% endif %}
+    
     <div class="d-flex">
         <div class="dropdown calendar-dropdown me-2">
             <button class="btn dropdown-toggle" type="button" id="calendarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -131,6 +140,8 @@
     </div>
 </div>
 
+{% if active_page == 'dashboard' or not active_page %}
+<!-- Main Dashboard Content -->
 <!-- Content Row -->
 <div class="row">
     <!-- Total Employees Card -->
@@ -369,6 +380,671 @@
                     </div>
                     <div class="card-body">
                         <div class="recent-employees-table">
+
+{% elif active_page == 'attendance_daily_status' %}
+<!-- Daily Attendance Status Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Daily Attendance Status ({{ today }})</h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="attendanceOptionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="attendanceOptionsDropdown">
+                <a class="dropdown-item" href="#">Export to Excel</a>
+                <a class="dropdown-item" href="#">Export to PDF</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Mark All Absent as Present</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="attendanceTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Working Hours</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if attendance %}
+                        {% for record in attendance %}
+                        <tr>
+                            <td>{{ record.employee_name }}</td>
+                            <td>{{ record.department }}</td>
+                            <td>
+                                {% if record.status == 'Present' %}
+                                <span class="badge bg-success">Present</span>
+                                {% elif record.status == 'Absent' %}
+                                <span class="badge bg-danger">Absent</span>
+                                {% elif record.status == 'Half Day' %}
+                                <span class="badge bg-warning">Half Day</span>
+                                {% elif record.status == 'On Leave' %}
+                                <span class="badge bg-info">On Leave</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Not Marked</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.check_in|default('-', true) }}</td>
+                            <td>{{ record.check_out|default('-', true) }}</td>
+                            <td>{{ record.working_hours|default('-', true) }}</td>
+                            <td>
+                                <a href="#" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No attendance records found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% elif active_page == 'attendance_monthly_report' %}
+<!-- Monthly Attendance Report Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Monthly Attendance Report ({{ month }} {{ year }})</h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="reportOptionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="reportOptionsDropdown">
+                <a class="dropdown-item" href="#">Export to Excel</a>
+                <a class="dropdown-item" href="#">Export to PDF</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">View Previous Month</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if monthly_data %}
+        <div class="table-responsive">
+            <table class="table table-bordered" id="monthlyAttendanceTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Present Days</th>
+                        <th>Absent Days</th>
+                        <th>Half Days</th>
+                        <th>Leave Days</th>
+                        <th>Attendance (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in monthly_data %}
+                    <tr>
+                        <td>{{ record.employee_name }}</td>
+                        <td>{{ record.department }}</td>
+                        <td>{{ record.present_days }}</td>
+                        <td>{{ record.absent_days }}</td>
+                        <td>{{ record.half_days }}</td>
+                        <td>{{ record.leave_days }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress progress-sm flex-grow-1 me-2" style="height: a5px;">
+                                    {% if record.attendance_percentage >= 90 %}
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ record.attendance_percentage }}%" aria-valuenow="{{ record.attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% elif record.attendance_percentage >= 70 %}
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ record.attendance_percentage }}%" aria-valuenow="{{ record.attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% elif record.attendance_percentage >= 50 %}
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ record.attendance_percentage }}%" aria-valuenow="{{ record.attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% else %}
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ record.attendance_percentage }}%" aria-valuenow="{{ record.attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% endif %}
+                                </div>
+                                <div>{{ record.attendance_percentage }}%</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">No monthly data available for the selected period.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% elif active_page == 'attendance_upload_bulk' %}
+<!-- Bulk Upload Attendance Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Bulk Upload Attendance</h6>
+    </div>
+    <div class="card-body">
+        <form method="post" id="bulkAttendanceForm" action="/attendance/upload-bulk">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="attendanceDate" class="form-label">Attendance Date</label>
+                    <input type="date" class="form-control" id="attendanceDate" name="attendance_date" value="{{ form.date }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="departmentFilter" class="form-label">Department</label>
+                    <select class="form-select" id="departmentFilter" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in form.departments %}
+                        <option value="{{ dept }}">{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="attendanceStatus" class="form-label">Default Status</label>
+                    <select class="form-select" id="attendanceStatus" name="default_status">
+                        {% for status in form.statuses %}
+                        <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" id="applyDefaultStatus">Apply Default Status to All</button>
+                <button type="button" class="btn btn-outline-secondary ms-2" id="uploadCSV">Upload CSV</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered" id="bulkAttendanceTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Working Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if form.employees %}
+                            {% for emp in form.employees %}
+                            <tr>
+                                <td><input type="checkbox" name="selected_employees[]" value="{{ emp.id }}" class="form-check-input"></td>
+                                <td>{{ emp.employee_id }}</td>
+                                <td>{{ emp.employee_name }}</td>
+                                <td>{{ emp.department }}</td>
+                                <td>
+                                    <select class="form-select form-select-sm" name="status[{{ emp.id }}]">
+                                        {% for status in form.statuses %}
+                                        <option value="{{ status }}">{{ status }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="time" class="form-control form-control-sm" name="check_in[{{ emp.id }}]"></td>
+                                <td><input type="time" class="form-control form-control-sm" name="check_out[{{ emp.id }}]"></td>
+                                <td><input type="number" step="0.5" class="form-control form-control-sm" name="working_hours[{{ emp.id }}]"></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No employees found.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-success">Save Attendance</button>
+                <button type="reset" class="btn btn-outline-secondary ms-2">Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% elif active_page == 'leave_types' or active_page == 'leave_pending_approvals' or active_page == 'leave_report' %}
+<!-- Leave Management Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">{{ subsection }}</h6>
+        <div class="d-flex">
+            <button type="button" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add New
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if active_page == 'leave_types' and leave_types %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="leaveTypesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Max Days Allowed</th>
+                            <th>Paid Leave</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave_type in leave_types %}
+                        <tr>
+                            <td>{{ leave_type.name }}</td>
+                            <td>{{ leave_type.max_days_allowed }}</td>
+                            <td>{% if leave_type.is_paid_leave %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning">No</span>{% endif %}</td>
+                            <td>
+                                <a href="#" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>
+                                <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_page == 'leave_pending_approvals' and leaves %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="pendingLeavesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Leave Type</th>
+                            <th>From Date</th>
+                            <th>To Date</th>
+                            <th>Days</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td>{{ leave.employee_name }}</td>
+                            <td>{{ leave.department }}</td>
+                            <td>{{ leave.leave_type }}</td>
+                            <td>{{ leave.from_date }}</td>
+                            <td>{{ leave.to_date }}</td>
+                            <td>{{ leave.total_leave_days }}</td>
+                            <td>{{ leave.reason }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm">Approve</button>
+                                <button class="btn btn-danger btn-sm">Reject</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_page == 'leave_report' and data %}
+            <div class="mb-4">
+                <canvas id="leaveUtilizationChart" height="300"></canvas>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="leaveReportTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Department</th>
+                            {% for leave_type in data.leave_types %}
+                            <th>{{ leave_type.name }} (Available)</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in data.employees %}
+                        <tr>
+                            <td>{{ employee.name }}</td>
+                            <td>{{ employee.department }}</td>
+                            {% for leave in employee.leaves %}
+                            <td>{{ leave.taken }}/{{ leave.taken + leave.balance }} ({{ leave.balance }})</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No data available.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% elif active_page == 'payroll_salary_slips' or active_page == 'process_payroll' or active_page == 'payroll_salary_structures' %}
+<!-- Payroll Management Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">{{ subsection }}</h6>
+        <div class="d-flex">
+            {% if active_page == 'payroll_salary_slips' %}
+            <button type="button" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Create Salary Slip
+            </button>
+            {% elif active_page == 'payroll_salary_structures' %}
+            <button type="button" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Create Salary Structure
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if active_page == 'payroll_salary_slips' and slips %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="salarySlipsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Posting Date</th>
+                            <th>Gross Pay</th>
+                            <th>Net Pay</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slip in slips %}
+                        <tr>
+                            <td>{{ slip.employee_name }}</td>
+                            <td>{{ slip.department }}</td>
+                            <td>{{ slip.start_date }}</td>
+                            <td>{{ slip.end_date }}</td>
+                            <td>{{ slip.posting_date }}</td>
+                            <td>${{ slip.gross_pay }}</td>
+                            <td>${{ slip.net_pay }}</td>
+                            <td><span class="badge {% if slip.status == 'Draft' %}bg-secondary{% elif slip.status == 'Submitted' %}bg-success{% else %}bg-danger{% endif %}">{{ slip.status }}</span></td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Action
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">View</a></li>
+                                        <li><a class="dropdown-item" href="#">Edit</a></li>
+                                        <li><a class="dropdown-item" href="#">Print</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#">Email</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_page == 'process_payroll' and data %}
+            <form id="processPayrollForm" method="post" action="/payroll/process">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label for="payrollMonth" class="form-label">Month</label>
+                        <select class="form-select" id="payrollMonth" name="month" required>
+                            <option value="{{ data.month }}" selected>{{ data.month }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="payrollYear" class="form-label">Year</label>
+                        <select class="form-select" id="payrollYear" name="year" required>
+                            <option value="{{ data.year }}" selected>{{ data.year }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="salaryStructure" class="form-label">Salary Structure</label>
+                        <select class="form-select" id="salaryStructure" name="salary_structure">
+                            <option value="">Select Structure</option>
+                            {% for structure in data.salary_structures %}
+                            <option value="{{ structure }}">{{ structure }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="postingDate" class="form-label">Posting Date</label>
+                        <input type="date" class="form-control" id="postingDate" name="posting_date" value="{{ data.today }}" required>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="employeePayrollTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllEmployees" class="form-check-input"></th>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Salary Structure</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in data.employees %}
+                            <tr>
+                                <td><input type="checkbox" name="selected_employees[]" value="{{ employee.id }}" class="form-check-input"></td>
+                                <td>{{ employee.name }}</td>
+                                <td>{{ employee.department }}</td>
+                                <td>
+                                    <select class="form-select form-select-sm" name="employee_structure[{{ employee.id }}]">
+                                        <option value="{{ employee.structure }}">{{ employee.structure }}</option>
+                                        {% for structure in data.salary_structures %}
+                                            {% if structure != employee.structure %}
+                                            <option value="{{ structure }}">{{ structure }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-primary btn-sm">View Last Slip</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success">Create Salary Slips</button>
+                    <button type="button" class="btn btn-outline-secondary ms-2">Cancel</button>
+                </div>
+            </form>
+        {% elif active_page == 'payroll_salary_structures' and structures %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="salaryStructuresTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Structure Name</th>
+                            <th>From Date</th>
+                            <th>Base Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for structure in structures %}
+                        <tr>
+                            <td>{{ structure.name }}</td>
+                            <td>{{ structure.from_date }}</td>
+                            <td>${{ structure.base_amount }}</td>
+                            <td>{% if structure.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                            <td>
+                                <a href="#" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>
+                                <a href="#" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                                <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No data available.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% elif active_page == 'recruitment_job_openings' or active_page == 'recruitment_job_applicants' or active_page == 'recruitment_interviews' %}
+<!-- Recruitment Module Content -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">{{ subsection }}</h6>
+        <div class="d-flex">
+            <button type="button" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add New
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if active_page == 'recruitment_job_openings' and jobs %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="jobOpeningsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Applicants</th>
+                            <th>Published</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td>{{ job.job_title }}</td>
+                            <td>{{ job.department }}</td>
+                            <td><span class="badge {% if job.status == 'Open' %}bg-success{% else %}bg-secondary{% endif %}">{{ job.status }}</span></td>
+                            <td>{{ job.applicant_count }}</td>
+                            <td>{% if job.publish %}<i class="fas fa-check text-success"></i>{% else %}<i class="fas fa-times text-danger"></i>{% endif %}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Action
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">View</a></li>
+                                        <li><a class="dropdown-item" href="#">Edit</a></li>
+                                        <li><a class="dropdown-item" href="#">View Applicants</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#">Close Job</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_page == 'recruitment_job_applicants' and applicants %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="jobApplicantsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Applicant Name</th>
+                            <th>Job Position</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Resume</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for applicant in applicants %}
+                        <tr>
+                            <td>{{ applicant.name }}</td>
+                            <td>{{ applicant.job_title }}</td>
+                            <td>{{ applicant.email }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if applicant.status == 'Open' %}bg-primary
+                                    {% elif applicant.status == 'Replied' %}bg-info
+                                    {% elif applicant.status == 'Rejected' %}bg-danger
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ applicant.status }}
+                                </span>
+                            </td>
+                            <td>{% if applicant.has_resume %}<a href="#" class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-pdf"></i> View</a>{% else %}-{% endif %}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Action
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">View Details</a></li>
+                                        <li><a class="dropdown-item" href="#">Schedule Interview</a></li>
+                                        <li><a class="dropdown-item" href="#">Send Email</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-success" href="#">Mark as Shortlisted</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#">Reject Application</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_page == 'recruitment_interviews' and interviews %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="interviewsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Applicant Name</th>
+                            <th>Job Position</th>
+                            <th>Interview Date</th>
+                            <th>Interviewer</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interview in interviews %}
+                        <tr>
+                            <td>{{ interview.applicant_name }}</td>
+                            <td>{{ interview.job_title }}</td>
+                            <td>{{ interview.schedule_date }}</td>
+                            <td>{{ interview.interviewer }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if interview.status == 'Scheduled' %}bg-primary
+                                    {% elif interview.status == 'Completed' %}bg-success
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ interview.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Action
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">View Details</a></li>
+                                        <li><a class="dropdown-item" href="#">Edit Interview</a></li>
+                                        <li><a class="dropdown-item" href="#">Send Reminder</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#">Add Feedback</a></li>
+                                        <li><a class="dropdown-item" href="#">Mark as Completed</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No data available.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">Content for {{ active_page }}</h4>
+    <p>This section is under development. Please check back later or contact the administrator for more information.</p>
+</div>
+{% endif %}>
                             <div class="d-flex align-items-center py-2 border-bottom">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="bg-primary rounded-circle d-flex justify-content-center align-items-center text-white" style="width: 40px; height: 40px;">
