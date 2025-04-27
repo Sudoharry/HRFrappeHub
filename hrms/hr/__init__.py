@@ -1,2 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+"""
+HR Module for HRMS
+
+This module contains the HR doctypes and controllers.
+"""
