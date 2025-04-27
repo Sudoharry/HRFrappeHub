@@ -278,7 +278,7 @@ def index():
             return redirect(url_for('hr_dashboard'))
         else:
             return redirect(url_for('employee_portal'))
-    return render_template('login.html')
+    return render_template('modern/login.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -296,7 +296,7 @@ def login():
         else:
             flash('Invalid username or password')
     
-    return render_template('login.html')
+    return render_template('modern/login.html')
 
 @app.route('/logout')
 @login_required
@@ -318,7 +318,7 @@ def hr_dashboard():
     context['title'] = 'HR Dashboard'
     context['parents'] = [{"name": "Home", "route": "/"}]
     
-    return render_template('hr_dashboard.html', **context)
+    return render_template('modern/hr_dashboard.html', **context)
 
 @app.route('/employee-portal')
 @login_required
@@ -426,7 +426,7 @@ def employee_portal():
     context['title'] = 'Employee Portal'
     context['parents'] = [{"name": "Home", "route": "/"}]
     
-    return render_template('employee_portal.html', **context)
+    return render_template('modern/employee_portal.html', **context)
 
 # Employee feature routes
 @app.route('/apply-leave', methods=['GET', 'POST'])
