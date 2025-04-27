@@ -28,13 +28,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt /app/
+# Copy package definition
+COPY pyproject.toml /app/
+COPY uv.lock /app/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir mysqlclient gunicorn
+RUN pip install --no-cache-dir poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install
+RUN pip install --no-cache-dir mysqlclient gunicorn gevent redis
 
 # Copy application code
 COPY . /app/
