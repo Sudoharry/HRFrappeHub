@@ -122,11 +122,14 @@
             text-decoration: none;
             border-radius: 0.35rem;
             white-space: nowrap;
+            transition: all 0.2s ease-in-out;
+            border-left: 3px solid transparent;
         }
         
         .sidebar .nav-item .collapse .collapse-inner .collapse-item:hover,
         .sidebar .nav-item .collapsing .collapse-inner .collapse-item:hover {
             background-color: #eaecf4;
+            transform: translateX(5px);
         }
         
         .sidebar .nav-item .collapse .collapse-inner .collapse-item:active,
@@ -136,8 +139,23 @@
         
         .sidebar .nav-item .collapse .collapse-inner .collapse-item.active,
         .sidebar .nav-item .collapsing .collapse-inner .collapse-item.active {
-            color: #4e73df;
+            color: var(--primary-color);
             font-weight: 700;
+            background-color: #eaecf4;
+            border-left-color: var(--primary-color);
+        }
+        
+        /* Dropdown toggle enhancement */
+        .sidebar .nav-item .nav-link[data-bs-toggle="collapse"]::after {
+            float: right;
+            content: '\f105';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            transition: transform 0.2s;
+        }
+        
+        .sidebar .nav-item .nav-link[data-bs-toggle="collapse"][aria-expanded="true"]::after {
+            transform: rotate(90deg);
         }
         
         .sidebar .nav-link {
@@ -678,16 +696,66 @@
             document.querySelector('.main-content').classList.toggle('main-content-expanded');
         });
         
-        // Add active class to the current nav item
+        // Dropdown menu and active class handling
         document.addEventListener("DOMContentLoaded", function() {
             const currentPath = window.location.pathname;
             const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            const dropdownLinks = document.querySelectorAll('.sidebar .collapse-item');
             
+            // Set active state for main nav items
             navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && currentPath === href) {
                     link.classList.add('active');
                 }
             });
+            
+            // Set active state for dropdown items and expand relevant dropdown
+            dropdownLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && currentPath === href) {
+                    link.classList.add('active');
+                    
+                    // Find parent collapse and show it
+                    const parentCollapse = link.closest('.collapse');
+                    if (parentCollapse) {
+                        parentCollapse.classList.add('show');
+                        
+                        // Also mark the dropdown toggle as active
+                        const toggler = document.querySelector(`[data-bs-target="#${parentCollapse.id}"]`);
+                        if (toggler) {
+                            toggler.classList.add('active');
+                            toggler.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                }
+            });
+            
+            // Check if the current path is part of a section
+            // This handles cases where we want to highlight a section even if exact path doesn't match
+            const pathParts = currentPath.split('/').filter(Boolean);
+            if (pathParts.length > 0) {
+                const section = pathParts[0]; // First part of the path
+                
+                // Find and expand the dropdown for the current section
+                const sectionDropdowns = document.querySelectorAll('.sidebar .dropdown-toggle');
+                sectionDropdowns.forEach(dropdown => {
+                    const dropdownHref = dropdown.getAttribute('href');
+                    if (dropdownHref && dropdownHref.includes(section)) {
+                        dropdown.classList.add('active');
+                        
+                        // Find and show the submenu
+                        const submenuId = dropdown.getAttribute('data-bs-target');
+                        if (submenuId) {
+                            const submenu = document.querySelector(submenuId);
+                            if (submenu) {
+                                submenu.classList.add('show');
+                                dropdown.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                    }
+                });
+            }
         });
     </script>
     {% block extra_js %}{% endblock %}

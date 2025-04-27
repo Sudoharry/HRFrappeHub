@@ -673,7 +673,7 @@ def employees_list():
 
 @app.route('/attendance/daily-status')
 @login_required
-def attendance_daily_status():
+def attendance_daily_view():
     if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
         flash('You do not have permission to access this page.')
         return redirect(url_for('employee_portal'))
@@ -699,10 +699,14 @@ def attendance_daily_status():
             'working_hours': att_record.working_hours if att_record else None
         })
     
-    return render_template('modern/attendance_daily.html', 
+    # Use hr_dashboard.html as the template to make sure we use the existing template
+    # Backwords compatibility
+    return render_template('modern/hr_dashboard.html', 
                           attendance=attendance_status,
                           today=today.strftime('%Y-%m-%d'),
-                          active_page='attendance',
+                          active_page='attendance_daily_status',
+                          section='Attendance Management',
+                          subsection='Daily Status',
                           title='Daily Attendance Status')
 
 @app.route('/leave/pending-approvals')
@@ -1165,6 +1169,303 @@ def recruitment_job_applicants():
                           section='Recruitment',
                           subsection='Job Applicants',
                           applicants=applicants)
+
+# Additional Performance Module Routes
+@app.route('/performance/appraisals')
+@login_required
+def performance_appraisals_list():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get appraisal data
+    appraisals = []
+    for appraisal in Appraisal.query.all():
+        employee = Employee.query.get(appraisal.employee_id)
+        appraisals.append({
+            'id': appraisal.id,
+            'employee_name': employee.employee_name if employee else 'Unknown',
+            'department': employee.department if employee else 'Unknown',
+            'start_date': appraisal.start_date,
+            'end_date': appraisal.end_date,
+            'status': appraisal.status,
+            'score': appraisal.score
+        })
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='performance_appraisals',
+                          title='Performance Appraisals',
+                          section='Performance Management',
+                          subsection='Appraisals',
+                          appraisals=appraisals)
+
+@app.route('/performance/goals')
+@login_required
+def performance_goals():
+    # For demonstration, we'll use static data
+    goals_data = {
+        'company_goals': [
+            {'title': 'Increase Revenue by 20%', 'status': 'In Progress', 'completion': 65},
+            {'title': 'Reduce Employee Turnover', 'status': 'In Progress', 'completion': 40},
+            {'title': 'Launch New Product Line', 'status': 'Completed', 'completion': 100},
+        ],
+        'department_goals': [
+            {'department': 'Engineering', 'title': 'Complete Platform Migration', 'status': 'In Progress', 'completion': 75},
+            {'department': 'HR', 'title': 'Implement New Training Program', 'status': 'In Progress', 'completion': 60},
+            {'department': 'Marketing', 'title': 'Increase Social Media Engagement', 'status': 'In Progress', 'completion': 80},
+        ],
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='performance_goals',
+                          title='Performance Goals',
+                          section='Performance Management',
+                          subsection='Goals',
+                          data=goals_data)
+
+@app.route('/performance/feedback')
+@login_required
+def performance_feedback():
+    # For demonstration, we'll use static data
+    feedback_data = {
+        'recent_feedback': [
+            {'employee': 'John Smith', 'reviewer': 'Alice Johnson', 'type': '360 Review', 'date': datetime.now() - timedelta(days=5)},
+            {'employee': 'Mary Wilson', 'reviewer': 'Tom Davis', 'type': 'Manager Feedback', 'date': datetime.now() - timedelta(days=7)},
+            {'employee': 'Robert Brown', 'reviewer': 'Sarah Miller', 'type': 'Peer Review', 'date': datetime.now() - timedelta(days=10)},
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='performance_feedback',
+                          title='Performance Feedback',
+                          section='Performance Management',
+                          subsection='Feedback',
+                          data=feedback_data)
+
+# Reports Module Routes
+@app.route('/reports/employee')
+@login_required
+def reports_employee():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # For demonstration, we'll use static data
+    report_data = {
+        'total_employees': Employee.query.filter_by(status='Active').count(),
+        'departments': Department.query.count(),
+        'new_hires_this_month': 3,
+        'turnover_rate': 5.2,
+        'department_distribution': [
+            {'department': 'Engineering', 'count': 16, 'percentage': 29.6},
+            {'department': 'HR', 'count': 5, 'percentage': 9.3},
+            {'department': 'Finance', 'count': 9, 'percentage': 16.7},
+            {'department': 'Marketing', 'count': 14, 'percentage': 25.9},
+            {'department': 'Operations', 'count': 10, 'percentage': 18.5}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='reports_employee',
+                          title='Employee Reports',
+                          section='Reports',
+                          subsection='Employee Reports',
+                          data=report_data)
+
+@app.route('/reports/attendance')
+@login_required
+def reports_attendance():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # For demonstration, we'll use static data
+    report_data = {
+        'attendance_trend': [
+            {'month': 'Jan', 'present_percentage': 92},
+            {'month': 'Feb', 'present_percentage': 94},
+            {'month': 'Mar', 'present_percentage': 91},
+            {'month': 'Apr', 'present_percentage': 93},
+        ],
+        'department_attendance': [
+            {'department': 'Engineering', 'present_percentage': 94, 'absent_percentage': 6},
+            {'department': 'HR', 'present_percentage': 95, 'absent_percentage': 5},
+            {'department': 'Finance', 'present_percentage': 98, 'absent_percentage': 2},
+            {'department': 'Marketing', 'present_percentage': 90, 'absent_percentage': 10},
+            {'department': 'Operations', 'present_percentage': 93, 'absent_percentage': 7}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='reports_attendance',
+                          title='Attendance Reports',
+                          section='Reports',
+                          subsection='Attendance Reports',
+                          data=report_data)
+
+@app.route('/reports/leave')
+@login_required
+def reports_leave():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # For demonstration, we'll use static data
+    report_data = {
+        'leave_utilization': [
+            {'month': 'Jan', 'days_taken': 45},
+            {'month': 'Feb', 'days_taken': 38},
+            {'month': 'Mar', 'days_taken': 52},
+            {'month': 'Apr', 'days_taken': 42},
+        ],
+        'leave_by_type': [
+            {'type': 'Casual Leave', 'days_taken': 142, 'percentage': 31.3},
+            {'type': 'Sick Leave', 'days_taken': 87, 'percentage': 19.2},
+            {'type': 'Paid Time Off', 'days_taken': 214, 'percentage': 47.2},
+            {'type': 'Unpaid Leave', 'days_taken': 12, 'percentage': 2.3}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='reports_leave',
+                          title='Leave Reports',
+                          section='Reports',
+                          subsection='Leave Reports',
+                          data=report_data)
+
+@app.route('/reports/payroll')
+@login_required
+def reports_payroll():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # For demonstration, we'll use static data
+    report_data = {
+        'payroll_trend': [
+            {'month': 'Jan', 'amount': 158000},
+            {'month': 'Feb', 'amount': 159500},
+            {'month': 'Mar', 'amount': 160000},
+            {'month': 'Apr', 'amount': 162000},
+        ],
+        'department_payroll': [
+            {'department': 'Engineering', 'amount': 65000, 'percentage': 40.1},
+            {'department': 'HR', 'amount': 15000, 'percentage': 9.3},
+            {'department': 'Finance', 'amount': 28000, 'percentage': 17.3},
+            {'department': 'Marketing', 'amount': 32000, 'percentage': 19.8},
+            {'department': 'Operations', 'amount': 22000, 'percentage': 13.5}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='reports_payroll',
+                          title='Payroll Reports',
+                          section='Reports',
+                          subsection='Payroll Reports',
+                          data=report_data)
+
+# Additional Routes for Payroll Module
+@app.route('/payroll/salary-slips')
+@login_required
+def payroll_salary_slips_list():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get salary slip data
+    salary_slips = []
+    for slip in SalarySlip.query.all():
+        employee = Employee.query.get(slip.employee_id)
+        salary_slips.append({
+            'id': slip.id,
+            'employee_name': employee.employee_name if employee else 'Unknown',
+            'department': employee.department if employee else 'Unknown',
+            'posting_date': slip.posting_date,
+            'start_date': slip.start_date,
+            'end_date': slip.end_date,
+            'gross_pay': slip.gross_pay,
+            'net_pay': slip.net_pay,
+            'status': slip.status
+        })
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='payroll_salary_slips',
+                          title='Salary Slips',
+                          section='Payroll Management',
+                          subsection='Salary Slips',
+                          slips=salary_slips)
+
+@app.route('/payroll/salary-structures')
+@login_required
+def payroll_salary_structures():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get salary structure data
+    structures = []
+    for structure in SalaryStructure.query.all():
+        structures.append({
+            'id': structure.id,
+            'name': structure.name,
+            'is_active': structure.is_active,
+            'from_date': structure.from_date,
+            'base_amount': structure.base_amount
+        })
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='payroll_salary_structures',
+                          title='Salary Structures',
+                          section='Payroll Management',
+                          subsection='Salary Structures',
+                          structures=structures)
+
+# Additional Routes for Leave Management
+@app.route('/leave/types')
+@login_required
+def leave_types():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get leave type data
+    leave_types = []
+    for leave_type in LeaveType.query.all():
+        leave_types.append({
+            'id': leave_type.id,
+            'name': leave_type.name,
+            'max_days_allowed': leave_type.max_days_allowed,
+            'is_paid_leave': leave_type.is_paid_leave
+        })
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='leave_types',
+                          title='Leave Types',
+                          section='Leave Management',
+                          subsection='Leave Types',
+                          leave_types=leave_types)
+
+# Additional Routes for Recruitment
+@app.route('/recruitment/interviews')
+@login_required
+def recruitment_interviews():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    # For demonstration, we'll use static data
+    interviews = [
+        {'id': 1, 'applicant_name': 'John Doe', 'job_title': 'Senior Developer', 'schedule_date': datetime.now() + timedelta(days=2), 'interviewer': 'Alice Johnson', 'status': 'Scheduled'},
+        {'id': 2, 'applicant_name': 'Mary Smith', 'job_title': 'HR Specialist', 'schedule_date': datetime.now() + timedelta(days=1), 'interviewer': 'Tom Davis', 'status': 'Scheduled'},
+        {'id': 3, 'applicant_name': 'Robert Brown', 'job_title': 'Marketing Manager', 'schedule_date': datetime.now() - timedelta(days=1), 'interviewer': 'Sarah Miller', 'status': 'Completed'}
+    ]
+    
+    return render_template('modern/hr_dashboard.html',
+                          active_page='recruitment_interviews',
+                          title='Interviews',
+                          section='Recruitment',
+                          subsection='Interviews',
+                          interviews=interviews)
 
 # Settings Routes
 @app.route('/settings')
