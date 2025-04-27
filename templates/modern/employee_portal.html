@@ -1,0 +1,707 @@
+{% extends "modern/base.html" %}
+
+{% set active_page = "dashboard" %}
+
+{% block title %}Employee Portal - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        transition: all 0.3s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .profile-card {
+        background-image: linear-gradient(rgba(78, 115, 223, 0.1), rgba(78, 115, 223, 0.5)), url('https://images.unsplash.com/photo-1462899006636-339e08d1844e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=900&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTY1MTAzNTM3OQ&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1600');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        border: none;
+    }
+    
+    .profile-card .card-body {
+        background-color: rgba(0, 0, 0, 0.4);
+        border-radius: 0.35rem;
+    }
+    
+    .profile-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #4e73df;
+        margin: 0 auto 1rem;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .calendar {
+        background-color: white;
+        border-radius: 0.35rem;
+        overflow: hidden;
+    }
+    
+    .calendar-header {
+        background-color: #4e73df;
+        color: white;
+        padding: 10px;
+        text-align: center;
+    }
+    
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+    }
+    
+    .calendar-days .day-name {
+        font-weight: bold;
+        padding: 10px;
+        border-bottom: 1px solid #e3e6f0;
+        color: #5a5c69;
+    }
+    
+    .calendar-days .day {
+        padding: 10px;
+        border-bottom: 1px solid #e3e6f0;
+        border-right: 1px solid #e3e6f0;
+        position: relative;
+        min-height: 60px;
+    }
+    
+    .calendar-days .day:nth-child(7n) {
+        border-right: none;
+    }
+    
+    .calendar-days .day.today {
+        background-color: #f8f9fc;
+        font-weight: bold;
+    }
+    
+    .calendar-days .day.current-month {
+        color: #5a5c69;
+    }
+    
+    .calendar-days .day.other-month {
+        color: #d1d3e2;
+    }
+    
+    .calendar-days .day .event {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 3px;
+        padding: 2px 4px;
+        font-size: 0.7rem;
+        margin-top: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .calendar-days .day .event.leave {
+        background-color: #e74a3b;
+    }
+    
+    .calendar-days .day .event.holiday {
+        background-color: #1cc88a;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    .leave-balance-card {
+        transition: all 0.3s;
+    }
+    
+    .leave-balance-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .leave-type {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 0.35rem;
+        transition: all 0.3s;
+    }
+    
+    .leave-type:hover {
+        transform: translateX(5px);
+    }
+    
+    .leave-type-casual {
+        background-color: rgba(78, 115, 223, 0.1);
+        border-left: 4px solid #4e73df;
+    }
+    
+    .leave-type-sick {
+        background-color: rgba(231, 74, 59, 0.1);
+        border-left: 4px solid #e74a3b;
+    }
+    
+    .leave-type-vacation {
+        background-color: rgba(28, 200, 138, 0.1);
+        border-left: 4px solid #1cc88a;
+    }
+    
+    .leave-type-unpaid {
+        background-color: rgba(246, 194, 62, 0.1);
+        border-left: 4px solid #f6c23e;
+    }
+    
+    .quick-action-btn {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #5a5c69;
+        padding: 1rem;
+        border-radius: 0.35rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        color: #4e73df;
+    }
+    
+    .quick-action-btn i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    .status-approved {
+        background-color: #1cc88a;
+    }
+    
+    .status-rejected {
+        background-color: #e74a3b;
+    }
+    
+    .status-pending {
+        background-color: #f6c23e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Welcome, {{ employee.first_name }}!</h1>
+    <div>
+        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-download fa-sm text-white-50"></i> Download Report
+        </a>
+    </div>
+</div>
+
+<!-- Top Row -->
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4 profile-card">
+            <div class="card-body text-center">
+                <div class="profile-image">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="h4 mb-1">{{ employee.employee_name }}</h2>
+                <p class="mb-2">{{ employee.designation }}</p>
+                <p class="mb-4"><i class="fas fa-building me-1"></i> {{ employee.department }}</p>
+                
+                <div class="row text-white-50 mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="small text-uppercase">Employee ID</div>
+                        <div>{{ employee.employee_id }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="small text-uppercase">Joined</div>
+                        <div>{{ employee.date_of_joining.strftime('%d %b, %Y') if employee.date_of_joining else 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-uppercase">Email</div>
+                        <div>{{ employee.email }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-uppercase">Reports To</div>
+                        <div>{{ reports_to_name or 'N/A' }}</div>
+                    </div>
+                </div>
+                
+                <a href="/my-profile" class="btn btn-light btn-sm">
+                    <i class="fas fa-user me-1"></i> View Full Profile
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions & Attendance Summary -->
+    <div class="col-xl-8 col-lg-7">
+        <!-- Quick Actions -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <a href="/apply-leave" class="quick-action-btn">
+                            <i class="fas fa-calendar-plus"></i>
+                            <div>Apply Leave</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <a href="/mark-attendance" class="quick-action-btn">
+                            <i class="fas fa-fingerprint"></i>
+                            <div>Mark Attendance</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <a href="/view-salary-slips" class="quick-action-btn">
+                            <i class="fas fa-receipt"></i>
+                            <div>Salary Slips</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4">
+                        <a href="/my-profile" class="quick-action-btn">
+                            <i class="fas fa-id-card"></i>
+                            <div>My Profile</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attendance Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Attendance Summary <small>({{ month_year }})</small></h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="attendanceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="attendanceDropdown">
+                        <a class="dropdown-item" href="/view-attendance">View All</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/mark-attendance">Mark Today's Attendance</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+                        <div class="border rounded-3 py-3">
+                            <h2 class="h4 text-success mb-1">{{ attendance_summary.present or 0 }}</h2>
+                            <div class="text-uppercase text-muted">Present</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+                        <div class="border rounded-3 py-3">
+                            <h2 class="h4 text-danger mb-1">{{ attendance_summary.absent or 0 }}</h2>
+                            <div class="text-uppercase text-muted">Absent</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+                        <div class="border rounded-3 py-3">
+                            <h2 class="h4 text-warning mb-1">{{ attendance_summary.half_day or 0 }}</h2>
+                            <div class="text-uppercase text-muted">Half Day</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-4 mb-md-0">
+                        <div class="border rounded-3 py-3">
+                            <h2 class="h4 text-info mb-1">{{ attendance_summary.on_leave or 0 }}</h2>
+                            <div class="text-uppercase text-muted">On Leave</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container mt-4">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Row -->
+<div class="row">
+    <!-- Leave Balances -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card shadow h-100 leave-balance-card">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Leave Balances</h6>
+            </div>
+            <div class="card-body">
+                {% if leave_balances %}
+                    {% for leave in leave_balances %}
+                        {% if leave.leave_type == 'Casual Leave' %}
+                            <div class="leave-type leave-type-casual">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="font-weight-bold">{{ leave.leave_type }}</div>
+                                        <div class="small text-muted">Available leaves</div>
+                                    </div>
+                                    <div class="h3 mb-0">{{ leave.balance_leaves }}</div>
+                                </div>
+                            </div>
+                        {% elif leave.leave_type == 'Sick Leave' %}
+                            <div class="leave-type leave-type-sick">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="font-weight-bold">{{ leave.leave_type }}</div>
+                                        <div class="small text-muted">Available leaves</div>
+                                    </div>
+                                    <div class="h3 mb-0">{{ leave.balance_leaves }}</div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="leave-type leave-type-unpaid">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="font-weight-bold">{{ leave.leave_type }}</div>
+                                        <div class="small text-muted">Available leaves</div>
+                                    </div>
+                                    <div class="h3 mb-0">{{ leave.balance_leaves }}</div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="text-center mt-4">
+                        <a href="/apply-leave" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Apply for Leave
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-times fa-3x text-gray-300"></i>
+                        </div>
+                        <p class="text-muted">No leave balances available</p>
+                        <a href="/apply-leave" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Apply for Leave
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leave Applications -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Leave Applications</h6>
+                <a href="/view-leaves" class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if leave_applications %}
+                    <div class="list-group list-group-flush">
+                        {% for leave in leave_applications %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1">{{ leave.leave_type }}</h6>
+                                <span class="badge {% if leave.indicator == 'green' %}bg-success{% elif leave.indicator == 'red' %}bg-danger{% else %}bg-warning{% endif %}">{{ leave.status }}</span>
+                            </div>
+                            <p class="mb-1 small">
+                                {{ leave.from_date.strftime('%d %b, %Y') if leave.from_date else '' }} 
+                                to 
+                                {{ leave.to_date.strftime('%d %b, %Y') if leave.to_date else '' }}
+                            </p>
+                            <small class="text-muted">{{ leave.total_leave_days }} day(s)</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-clipboard-list fa-3x text-gray-300"></i>
+                        </div>
+                        <p class="text-muted">No recent leave applications</p>
+                        <a href="/apply-leave" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Apply for Leave
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Holidays -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Upcoming Holidays</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if holidays %}
+                    <div class="list-group list-group-flush">
+                        {% for holiday in holidays %}
+                        <div class="list-group-item p-3 d-flex align-items-center">
+                            <div class="me-3 text-center">
+                                <div class="p-3 {% if holiday.is_today %}bg-success text-white{% else %}bg-light{% endif %} rounded">
+                                    <div class="small text-uppercase">{{ holiday.holiday_date.strftime('%b') if holiday.holiday_date else '' }}</div>
+                                    <div class="h4 mb-0">{{ holiday.holiday_date.strftime('%d') if holiday.holiday_date else '' }}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">{{ holiday.description }}</h6>
+                                <p class="mb-0 small text-muted">
+                                    {% if holiday.is_today %}
+                                        <span class="text-success">Today</span>
+                                    {% else %}
+                                        {{ holiday.days_away }} day(s) away
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-day fa-3x text-gray-300"></i>
+                        </div>
+                        <p class="text-muted">No upcoming holidays</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row -->
+<div class="row">
+    <!-- Calendar -->
+    <div class="col-xl-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Calendar</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="calendarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="calendarDropdown">
+                        <a class="dropdown-item" href="#">Month View</a>
+                        <a class="dropdown-item" href="#">Week View</a>
+                        <a class="dropdown-item" href="#">Day View</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Export Events</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-sm text-white"><i class="fas fa-chevron-left"></i></button>
+                            <h5 class="mb-0">April 2025</h5>
+                            <button class="btn btn-sm text-white"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="calendar-days">
+                        <div class="day-name">Sun</div>
+                        <div class="day-name">Mon</div>
+                        <div class="day-name">Tue</div>
+                        <div class="day-name">Wed</div>
+                        <div class="day-name">Thu</div>
+                        <div class="day-name">Fri</div>
+                        <div class="day-name">Sat</div>
+                        
+                        <!-- Previous month -->
+                        <div class="day other-month">30</div>
+                        <div class="day other-month">31</div>
+                        
+                        <!-- Current month -->
+                        <div class="day current-month">1</div>
+                        <div class="day current-month">2</div>
+                        <div class="day current-month">3</div>
+                        <div class="day current-month">4</div>
+                        <div class="day current-month">5</div>
+                        <div class="day current-month">6</div>
+                        <div class="day current-month">7</div>
+                        <div class="day current-month">8</div>
+                        <div class="day current-month">9</div>
+                        <div class="day current-month">10</div>
+                        <div class="day current-month">11</div>
+                        <div class="day current-month">12</div>
+                        <div class="day current-month">13</div>
+                        <div class="day current-month">14</div>
+                        <div class="day current-month">15</div>
+                        <div class="day current-month">16</div>
+                        <div class="day current-month">17</div>
+                        <div class="day current-month">18</div>
+                        <div class="day current-month">19</div>
+                        <div class="day current-month">20</div>
+                        <div class="day current-month">21</div>
+                        <div class="day current-month">22</div>
+                        <div class="day current-month">23</div>
+                        <div class="day current-month">24</div>
+                        <div class="day current-month">25</div>
+                        <div class="day current-month">26</div>
+                        <div class="day current-month today">27
+                            <div class="event">Team Meeting</div>
+                        </div>
+                        <div class="day current-month">28</div>
+                        <div class="day current-month">29</div>
+                        <div class="day current-month">30</div>
+                        
+                        <!-- Next month -->
+                        <div class="day other-month">1
+                            <div class="event holiday">Int'l Workers Day</div>
+                        </div>
+                        <div class="day other-month">2</div>
+                        <div class="day other-month">3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Salary Slips -->
+    <div class="col-xl-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Salary Slips</h6>
+                <a href="/view-salary-slips" class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if salary_slips %}
+                    <div class="list-group list-group-flush">
+                        {% for slip in salary_slips %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ slip.month }} {{ slip.year }}</h6>
+                                    <small class="text-muted">
+                                        <span class="status-indicator status-{% if slip.indicator == 'green' %}approved{% else %}pending{% endif %}"></span>
+                                        {{ slip.status }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="h5 mb-0">${{ '%.2f'|format(slip.net_pay) }}</div>
+                                    <a href="/view-salary-slip-detail/{{ slip.name.split('-')[1] }}" class="btn btn-sm btn-outline-primary mt-2">
+                                        View Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-file-invoice-dollar fa-3x text-gray-300"></i>
+                        </div>
+                        <p class="text-muted">No salary slips available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Attendance Chart
+        var ctx = document.getElementById('attendanceChart').getContext('2d');
+        var attendanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [
+                    {
+                        label: 'Present',
+                        data: [5, 5, 4, {{ attendance_summary.present or 0 }}],
+                        backgroundColor: 'rgba(28, 200, 138, 0.2)',
+                        borderColor: '#1cc88a',
+                        pointBackgroundColor: '#1cc88a',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#1cc88a',
+                        borderWidth: 2,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Absent',
+                        data: [0, 0, 1, {{ attendance_summary.absent or 0 }}],
+                        backgroundColor: 'rgba(231, 74, 59, 0.2)',
+                        borderColor: '#e74a3b',
+                        pointBackgroundColor: '#e74a3b',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#e74a3b',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 25,
+                        top: 25,
+                        bottom: 0
+                    }
+                },
+                scales: {
+                    x: {
+                        gridLines: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 7
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: {
+                            maxTicksLimit: 5,
+                            padding: 10
+                        },
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
