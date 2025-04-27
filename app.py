@@ -7,9 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize Flask app
-app = Flask(__name__, 
-            template_folder='hrms/www',  # Use existing template folder
-            static_folder='hrms/public')  # Use existing static folder
+app = Flask(__name__)  # Use default template directory
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hr-management-system-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrms.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
