@@ -1,0 +1,235 @@
+{
+    "autoname": "SS.#####",
+    "creation": "2023-01-01 00:00:00",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "employee_details_section",
+        "employee",
+        "employee_name",
+        "department",
+        "designation",
+        "branch",
+        "column_break_6",
+        "posting_date",
+        "salary_structure",
+        "payroll_frequency",
+        "start_date",
+        "end_date",
+        "salary_details_section",
+        "earnings",
+        "section_break_14",
+        "deductions",
+        "section_break_16",
+        "total_earning",
+        "total_deduction",
+        "column_break_19",
+        "net_pay",
+        "section_break_21",
+        "status",
+        "company",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "employee_details_section",
+            "fieldtype": "Section Break",
+            "label": "Employee Details"
+        },
+        {
+            "fieldname": "employee",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Employee",
+            "options": "Employee",
+            "reqd": 1,
+            "search_index": 1
+        },
+        {
+            "fieldname": "employee_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Employee Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "label": "Department",
+            "options": "Department",
+            "read_only": 1
+        },
+        {
+            "fieldname": "designation",
+            "fieldtype": "Link",
+            "label": "Designation",
+            "options": "Designation",
+            "read_only": 1
+        },
+        {
+            "fieldname": "branch",
+            "fieldtype": "Link",
+            "label": "Branch",
+            "options": "Branch",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_6",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "posting_date",
+            "fieldtype": "Date",
+            "label": "Posting Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "salary_structure",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Salary Structure",
+            "options": "Salary Structure",
+            "reqd": 1
+        },
+        {
+            "fieldname": "payroll_frequency",
+            "fieldtype": "Select",
+            "label": "Payroll Frequency",
+            "options": "Monthly\nFortnightly\nBimonthly\nWeekly\nDaily",
+            "read_only": 1
+        },
+        {
+            "fieldname": "start_date",
+            "fieldtype": "Date",
+            "label": "Start Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "end_date",
+            "fieldtype": "Date",
+            "label": "End Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "salary_details_section",
+            "fieldtype": "Section Break",
+            "label": "Earnings"
+        },
+        {
+            "fieldname": "earnings",
+            "fieldtype": "Table",
+            "label": "Earnings",
+            "options": "Salary Detail"
+        },
+        {
+            "fieldname": "section_break_14",
+            "fieldtype": "Section Break",
+            "label": "Deductions"
+        },
+        {
+            "fieldname": "deductions",
+            "fieldtype": "Table",
+            "label": "Deductions",
+            "options": "Salary Detail"
+        },
+        {
+            "fieldname": "section_break_16",
+            "fieldtype": "Section Break",
+            "label": "Totals"
+        },
+        {
+            "fieldname": "total_earning",
+            "fieldtype": "Currency",
+            "label": "Total Earning",
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_deduction",
+            "fieldtype": "Currency",
+            "label": "Total Deduction",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_19",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "net_pay",
+            "fieldtype": "Currency",
+            "label": "Net Pay",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_21",
+            "fieldtype": "Section Break"
+        },
+        {
+            "default": "Draft",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Draft\nSubmitted\nCancelled",
+            "read_only": 1
+        },
+        {
+            "fieldname": "company",
+            "fieldtype": "Link",
+            "label": "Company",
+            "options": "Company",
+            "reqd": 1
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "Salary Slip",
+            "print_hide": 1,
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2023-01-01 00:00:00",
+    "module": "Payroll",
+    "name": "Salary Slip",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "amend": 1,
+            "cancel": 1,
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR User",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "Employee"
+        }
+    ],
+    "search_fields": "employee,employee_name,salary_structure,start_date,end_date",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "title_field": "employee_name",
+    "track_changes": 1
+}

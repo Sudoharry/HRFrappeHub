@@ -1,0 +1,185 @@
+{
+    "autoname": "naming_series:",
+    "creation": "2023-01-01 00:00:00",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "applicant_details_section",
+        "naming_series",
+        "applicant_name",
+        "email",
+        "phone",
+        "column_break_5",
+        "status",
+        "source",
+        "job_title",
+        "application_details_section",
+        "resume_attachment",
+        "cover_letter",
+        "column_break_11",
+        "designation",
+        "department",
+        "company",
+        "section_break_13",
+        "notes",
+        "section_break_15",
+        "communication_history"
+    ],
+    "fields": [
+        {
+            "fieldname": "applicant_details_section",
+            "fieldtype": "Section Break",
+            "label": "Applicant Details"
+        },
+        {
+            "fieldname": "naming_series",
+            "fieldtype": "Select",
+            "label": "Series",
+            "options": "HR-APP-",
+            "reqd": 1
+        },
+        {
+            "fieldname": "applicant_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Applicant Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "email",
+            "fieldtype": "Data",
+            "label": "Email",
+            "options": "Email"
+        },
+        {
+            "fieldname": "phone",
+            "fieldtype": "Data",
+            "label": "Phone"
+        },
+        {
+            "fieldname": "column_break_5",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "Open",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Open\nReplied\nHold\nAccepted\nRejected",
+            "reqd": 1
+        },
+        {
+            "fieldname": "source",
+            "fieldtype": "Select",
+            "label": "Source",
+            "options": "Website\nWalk In\nEmployee Referral\nJob Portal\nRecruitment Agency\nOther"
+        },
+        {
+            "fieldname": "job_title",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Job Opening",
+            "options": "Job Opening",
+            "reqd": 1
+        },
+        {
+            "fieldname": "application_details_section",
+            "fieldtype": "Section Break",
+            "label": "Application Details"
+        },
+        {
+            "fieldname": "resume_attachment",
+            "fieldtype": "Attach",
+            "label": "Resume Attachment"
+        },
+        {
+            "fieldname": "cover_letter",
+            "fieldtype": "Text Editor",
+            "label": "Cover Letter"
+        },
+        {
+            "fieldname": "column_break_11",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "designation",
+            "fieldtype": "Link",
+            "label": "Designation",
+            "options": "Designation",
+            "read_only": 1
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "label": "Department",
+            "options": "Department",
+            "read_only": 1
+        },
+        {
+            "fieldname": "company",
+            "fieldtype": "Link",
+            "label": "Company",
+            "options": "Company",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_13",
+            "fieldtype": "Section Break",
+            "label": "Notes"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Text Editor",
+            "label": "Recruiter Notes"
+        },
+        {
+            "fieldname": "section_break_15",
+            "fieldtype": "Section Break",
+            "label": "Communication History"
+        },
+        {
+            "fieldname": "communication_history",
+            "fieldtype": "HTML",
+            "label": "Communication History"
+        }
+    ],
+    "links": [
+        {
+            "link_doctype": "Employee",
+            "link_fieldname": "job_applicant"
+        }
+    ],
+    "modified": "2023-01-01 00:00:00",
+    "module": "Recruitment",
+    "name": "Job Applicant",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR User",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "search_fields": "applicant_name,email,job_title,status",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "title_field": "applicant_name",
+    "track_changes": 1
+}

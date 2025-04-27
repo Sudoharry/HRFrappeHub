@@ -1,0 +1,108 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("HR Dashboard") }}{% endblock %}
+
+{% block page_content %}
+<div class="hr-dashboard-page">
+    <div class="container">
+        <h1>{{ _("HR Dashboard") }}</h1>
+        <p class="text-muted">{{ _("Welcome to the HR Management Dashboard") }}</p>
+        <hr>
+        
+        <!-- Dashboard Filters -->
+        <div class="dashboard-filters row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="department-filter">{{ _("Department") }}</label>
+                    <select id="department-filter" class="form-control">
+                        <option value="">{{ _("All Departments") }}</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.name }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="status-filter">{{ _("Status") }}</label>
+                    <select id="status-filter" class="form-control">
+                        <option value="">{{ _("All Status") }}</option>
+                        <option value="Active">{{ _("Active") }}</option>
+                        <option value="Inactive">{{ _("Inactive") }}</option>
+                        <option value="Left">{{ _("Left") }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="date-filter">{{ _("Date Range") }}</label>
+                    <select id="date-filter" class="form-control">
+                        <option value="today">{{ _("Today") }}</option>
+                        <option value="this_week">{{ _("This Week") }}</option>
+                        <option value="this_month" selected>{{ _("This Month") }}</option>
+                        <option value="this_quarter">{{ _("This Quarter") }}</option>
+                        <option value="this_year">{{ _("This Year") }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="refresh-dashboard">&nbsp;</label>
+                    <button id="refresh-dashboard" class="btn btn-primary form-control">
+                        <i class="fa fa-refresh"></i> {{ _("Refresh Dashboard") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Content Container -->
+        <div id="hr-dashboard-container"></div>
+    </div>
+</div>
+
+<style>
+.hr-dashboard-page {
+    padding: 20px 0;
+}
+.dashboard-filters {
+    margin-bottom: 30px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+}
+</style>
+
+<script>
+frappe.ready(function() {
+    // Load required Frappe libraries
+    frappe.require([
+        "assets/js/chart.min.js",
+        "assets/hrms/js/controllers/hr_dashboard.js"
+    ], function() {
+        // Initialize the dashboard
+        hrms.hr_dashboard.setup(document.getElementById('hr-dashboard-container'));
+        
+        // Set up event listeners for filters
+        $('#department-filter, #status-filter, #date-filter').on('change', function() {
+            refresh_dashboard();
+        });
+        
+        $('#refresh-dashboard').on('click', function() {
+            refresh_dashboard();
+        });
+        
+        function refresh_dashboard() {
+            // Get filter values
+            let filters = {
+                department: $('#department-filter').val(),
+                status: $('#status-filter').val(),
+                date_range: $('#date-filter').val()
+            };
+            
+            // Reset dashboard with filters
+            hrms.hr_dashboard.init_dashboard_data(filters);
+        }
+    });
+});
+</script>
+{% endblock %}

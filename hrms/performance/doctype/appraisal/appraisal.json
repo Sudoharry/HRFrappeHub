@@ -1,0 +1,213 @@
+{
+    "autoname": "naming_series:",
+    "creation": "2023-01-01 00:00:00",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "employee_details_section",
+        "naming_series",
+        "employee",
+        "employee_name",
+        "department",
+        "designation",
+        "column_break_6",
+        "appraisal_template",
+        "start_date",
+        "end_date",
+        "status",
+        "score_section",
+        "score_chart",
+        "column_break_12",
+        "total_score",
+        "score",
+        "goals_section",
+        "goals",
+        "section_break_16",
+        "appraisal_summary",
+        "notes",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "employee_details_section",
+            "fieldtype": "Section Break",
+            "label": "Employee Details"
+        },
+        {
+            "fieldname": "naming_series",
+            "fieldtype": "Select",
+            "label": "Series",
+            "options": "HR-APR-",
+            "reqd": 1
+        },
+        {
+            "fieldname": "employee",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Employee",
+            "options": "Employee",
+            "reqd": 1,
+            "search_index": 1
+        },
+        {
+            "fieldname": "employee_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Employee Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "label": "Department",
+            "options": "Department",
+            "read_only": 1
+        },
+        {
+            "fieldname": "designation",
+            "fieldtype": "Link",
+            "label": "Designation",
+            "options": "Designation",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_6",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "appraisal_template",
+            "fieldtype": "Link",
+            "label": "Appraisal Template",
+            "options": "Appraisal Template"
+        },
+        {
+            "fieldname": "start_date",
+            "fieldtype": "Date",
+            "label": "Start Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "end_date",
+            "fieldtype": "Date",
+            "label": "End Date",
+            "reqd": 1
+        },
+        {
+            "default": "Draft",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Draft\nCompleted\nCancelled",
+            "read_only": 1
+        },
+        {
+            "fieldname": "score_section",
+            "fieldtype": "Section Break",
+            "label": "Score"
+        },
+        {
+            "fieldname": "score_chart",
+            "fieldtype": "HTML",
+            "label": "Score Chart"
+        },
+        {
+            "fieldname": "column_break_12",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "total_score",
+            "fieldtype": "Float",
+            "label": "Average Score",
+            "precision": 2,
+            "read_only": 1
+        },
+        {
+            "fieldname": "score",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Weighted Score",
+            "precision": 2,
+            "read_only": 1
+        },
+        {
+            "fieldname": "goals_section",
+            "fieldtype": "Section Break",
+            "label": "Goals and Achievements"
+        },
+        {
+            "fieldname": "goals",
+            "fieldtype": "Table",
+            "label": "Goals",
+            "options": "Appraisal Goal",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_break_16",
+            "fieldtype": "Section Break",
+            "label": "Summary and Notes"
+        },
+        {
+            "fieldname": "appraisal_summary",
+            "fieldtype": "Text Editor",
+            "label": "Appraisal Summary"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "Appraisal",
+            "print_hide": 1,
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "links": [],
+    "modified": "2023-01-01 00:00:00",
+    "module": "Performance",
+    "name": "Appraisal",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "amend": 1,
+            "cancel": 1,
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR Manager",
+            "share": 1,
+            "submit": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR User",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "Employee"
+        }
+    ],
+    "search_fields": "employee,employee_name,department,designation,status",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "title_field": "employee_name",
+    "track_changes": 1
+}

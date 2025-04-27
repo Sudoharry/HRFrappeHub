@@ -1,0 +1,224 @@
+{
+    "autoname": "field:job_title",
+    "creation": "2023-01-01 00:00:00",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "job_details_section",
+        "job_title",
+        "status",
+        "publish",
+        "designation",
+        "department",
+        "company",
+        "column_break_7",
+        "application_end_date",
+        "job_location",
+        "starting_date",
+        "number_of_positions",
+        "employment_type",
+        "section_break_11",
+        "description",
+        "responsibilities",
+        "column_break_14",
+        "requirements",
+        "experience_requirements",
+        "website_details_section",
+        "route",
+        "column_break_18",
+        "meta_title",
+        "meta_description",
+        "meta_keywords"
+    ],
+    "fields": [
+        {
+            "fieldname": "job_details_section",
+            "fieldtype": "Section Break",
+            "label": "Job Details"
+        },
+        {
+            "fieldname": "job_title",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Job Title",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "default": "Open",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Open\nClosed",
+            "reqd": 1
+        },
+        {
+            "default": "0",
+            "fieldname": "publish",
+            "fieldtype": "Check",
+            "label": "Publish on Website"
+        },
+        {
+            "fieldname": "designation",
+            "fieldtype": "Link",
+            "label": "Designation",
+            "options": "Designation",
+            "reqd": 1
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "label": "Department",
+            "options": "Department"
+        },
+        {
+            "fieldname": "company",
+            "fieldtype": "Link",
+            "label": "Company",
+            "options": "Company",
+            "reqd": 1
+        },
+        {
+            "fieldname": "column_break_7",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "application_end_date",
+            "fieldtype": "Date",
+            "label": "Application End Date"
+        },
+        {
+            "fieldname": "job_location",
+            "fieldtype": "Data",
+            "label": "Job Location"
+        },
+        {
+            "fieldname": "starting_date",
+            "fieldtype": "Date",
+            "label": "Expected Starting Date"
+        },
+        {
+            "fieldname": "number_of_positions",
+            "fieldtype": "Int",
+            "label": "Number of Positions"
+        },
+        {
+            "fieldname": "employment_type",
+            "fieldtype": "Select",
+            "label": "Employment Type",
+            "options": "Full-time\nPart-time\nContract\nInternship\nTemporary"
+        },
+        {
+            "fieldname": "section_break_11",
+            "fieldtype": "Section Break",
+            "label": "Job Description"
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Text Editor",
+            "label": "Description",
+            "reqd": 1
+        },
+        {
+            "fieldname": "responsibilities",
+            "fieldtype": "Text Editor",
+            "label": "Responsibilities"
+        },
+        {
+            "fieldname": "column_break_14",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "requirements",
+            "fieldtype": "Text Editor",
+            "label": "Requirements"
+        },
+        {
+            "fieldname": "experience_requirements",
+            "fieldtype": "Text Editor",
+            "label": "Experience Requirements"
+        },
+        {
+            "fieldname": "website_details_section",
+            "fieldtype": "Section Break",
+            "label": "Website Details"
+        },
+        {
+            "fieldname": "route",
+            "fieldtype": "Data",
+            "label": "Route",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_18",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "meta_title",
+            "fieldtype": "Data",
+            "label": "Meta Title",
+            "read_only": 1
+        },
+        {
+            "fieldname": "meta_description",
+            "fieldtype": "Small Text",
+            "label": "Meta Description",
+            "read_only": 1
+        },
+        {
+            "fieldname": "meta_keywords",
+            "fieldtype": "Small Text",
+            "label": "Meta Keywords",
+            "read_only": 1
+        }
+    ],
+    "has_web_view": 1,
+    "is_published_field": "publish",
+    "links": [
+        {
+            "link_doctype": "Job Applicant",
+            "link_fieldname": "job_title"
+        }
+    ],
+    "modified": "2023-01-01 00:00:00",
+    "module": "Recruitment",
+    "name": "Job Opening",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR User",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Employee"
+        },
+        {
+            "read": 1,
+            "role": "Guest"
+        }
+    ],
+    "route": "jobs",
+    "search_fields": "job_title,status,job_location,description",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

@@ -1,0 +1,219 @@
+{
+    "autoname": "field:leave_type_name",
+    "creation": "2023-01-01 00:00:00",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "leave_type_name",
+        "section_break_2",
+        "is_active",
+        "is_lwp",
+        "is_ppl",
+        "is_optional",
+        "column_break_6",
+        "max_continuous_days",
+        "include_holiday",
+        "allow_fraction_day",
+        "minimum_fraction_day",
+        "section_break_10",
+        "applicable_after",
+        "max_leaves_per_year",
+        "column_break_13",
+        "allow_negative",
+        "allow_backdated_application",
+        "carry_forward_section",
+        "is_carry_forward",
+        "column_break_18",
+        "max_carry_forwarded_leaves",
+        "encashment_section",
+        "is_encash",
+        "allow_encashment",
+        "column_break_23",
+        "encashment_threshold_days"
+    ],
+    "fields": [
+        {
+            "fieldname": "leave_type_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Leave Type Name",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "section_break_2",
+            "fieldtype": "Section Break",
+            "label": "Settings"
+        },
+        {
+            "default": "1",
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Is Active"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_lwp",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Is Leave Without Pay"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_ppl",
+            "fieldtype": "Check",
+            "label": "Is Partially Paid Leave"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_optional",
+            "fieldtype": "Check",
+            "label": "Is Optional"
+        },
+        {
+            "fieldname": "column_break_6",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "max_continuous_days",
+            "fieldtype": "Int",
+            "label": "Maximum Continuous Days Applicable"
+        },
+        {
+            "default": "0",
+            "fieldname": "include_holiday",
+            "fieldtype": "Check",
+            "label": "Include holidays within leaves as leaves"
+        },
+        {
+            "default": "0",
+            "fieldname": "allow_fraction_day",
+            "fieldtype": "Check",
+            "label": "Allow Fraction Day"
+        },
+        {
+            "depends_on": "allow_fraction_day",
+            "fieldname": "minimum_fraction_day",
+            "fieldtype": "Float",
+            "label": "Minimum Fraction Day",
+            "default": "0.5"
+        },
+        {
+            "fieldname": "section_break_10",
+            "fieldtype": "Section Break",
+            "label": "Allocation"
+        },
+        {
+            "fieldname": "applicable_after",
+            "fieldtype": "Int",
+            "label": "Applicable After (Working Days)"
+        },
+        {
+            "fieldname": "max_leaves_per_year",
+            "fieldtype": "Float",
+            "label": "Maximum Leaves Per Year"
+        },
+        {
+            "fieldname": "column_break_13",
+            "fieldtype": "Column Break"
+        },
+        {
+            "default": "0",
+            "fieldname": "allow_negative",
+            "fieldtype": "Check",
+            "label": "Allow Negative Balance"
+        },
+        {
+            "default": "0",
+            "fieldname": "allow_backdated_application",
+            "fieldtype": "Check",
+            "label": "Allow Backdated Leave Application"
+        },
+        {
+            "fieldname": "carry_forward_section",
+            "fieldtype": "Section Break",
+            "label": "Carry Forward"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_carry_forward",
+            "fieldtype": "Check",
+            "label": "Is Carry Forward"
+        },
+        {
+            "fieldname": "column_break_18",
+            "fieldtype": "Column Break"
+        },
+        {
+            "depends_on": "is_carry_forward",
+            "fieldname": "max_carry_forwarded_leaves",
+            "fieldtype": "Float",
+            "label": "Maximum Carry Forwarded Leaves"
+        },
+        {
+            "fieldname": "encashment_section",
+            "fieldtype": "Section Break",
+            "label": "Encashment"
+        },
+        {
+            "default": "0",
+            "fieldname": "is_encash",
+            "fieldtype": "Check",
+            "label": "Is Encashable"
+        },
+        {
+            "default": "0",
+            "depends_on": "is_encash",
+            "fieldname": "allow_encashment",
+            "fieldtype": "Check",
+            "label": "Allow Encashment"
+        },
+        {
+            "fieldname": "column_break_23",
+            "fieldtype": "Column Break"
+        },
+        {
+            "depends_on": "is_encash",
+            "fieldname": "encashment_threshold_days",
+            "fieldtype": "Float",
+            "label": "Encashment Threshold Days"
+        }
+    ],
+    "links": [],
+    "modified": "2023-01-01 00:00:00",
+    "module": "HR",
+    "name": "Leave Type",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "HR User",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Employee"
+        }
+    ],
+    "search_fields": "leave_type_name",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

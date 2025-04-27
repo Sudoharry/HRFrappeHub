@@ -1,0 +1,333 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Employee Portal") }}{% endblock %}
+
+{% block page_content %}
+<div class="employee-portal-page">
+    <div class="container">
+        <h1>{{ _("Employee Portal") }}</h1>
+        <p class="text-muted">{{ _("Welcome, {0}").format(employee_name) }}</p>
+        <hr>
+        
+        <!-- Quick Actions Menu -->
+        <div class="row" style="margin-bottom: 30px;">
+            <div class="col-md-12">
+                <div class="quick-actions" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <h4>{{ _("Quick Actions") }}</h4>
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                            <a href="/desk#Form/Leave Application/New Leave Application" class="btn btn-default btn-block">
+                                <i class="fa fa-calendar-plus-o"></i> {{ _("Apply for Leave") }}
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                            <a href="/desk#Form/Attendance/New Attendance" class="btn btn-default btn-block">
+                                <i class="fa fa-check-circle"></i> {{ _("Mark Attendance") }}
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                            <a href="/desk#List/Salary Slip/List" class="btn btn-default btn-block">
+                                <i class="fa fa-money"></i> {{ _("View Salary Slips") }}
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6" style="margin-bottom: 10px;">
+                            <a href="/desk#Form/Employee/{{ employee_id }}" class="btn btn-default btn-block">
+                                <i class="fa fa-id-card"></i> {{ _("My Profile") }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="row">
+            <!-- Profile Summary -->
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("My Profile") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="employee-profile">
+                            <div class="text-center" style="margin-bottom: 20px;">
+                                <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; margin: auto;">
+                                    <i class="fa fa-user-circle-o" style="font-size: 100px; color: #c0c0c0;"></i>
+                                </div>
+                                <h4>{{ employee_name }}</h4>
+                                <p>{{ employee.designation }} - {{ employee.department }}</p>
+                            </div>
+                            
+                            <div class="employee-details">
+                                <div class="row" style="margin-bottom: 10px;">
+                                    <div class="col-xs-4"><strong>{{ _("Employee ID") }}</strong></div>
+                                    <div class="col-xs-8">{{ employee_id }}</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 10px;">
+                                    <div class="col-xs-4"><strong>{{ _("Email") }}</strong></div>
+                                    <div class="col-xs-8">{{ employee.company_email or employee.personal_email or '---' }}</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 10px;">
+                                    <div class="col-xs-4"><strong>{{ _("Date of Joining") }}</strong></div>
+                                    <div class="col-xs-8">{{ frappe.format_date(employee.date_of_joining) }}</div>
+                                </div>
+                                <div class="row" style="margin-bottom: 10px;">
+                                    <div class="col-xs-4"><strong>{{ _("Reports To") }}</strong></div>
+                                    <div class="col-xs-8">{{ reports_to_name or '---' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Leave Balance -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Leave Balance") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if leave_balances %}
+                            <div class="list-group">
+                                {% for leave in leave_balances %}
+                                <div class="list-group-item">
+                                    <div class="row">
+                                        <div class="col-xs-8">{{ leave.leave_type }}</div>
+                                        <div class="col-xs-4 text-right">
+                                            <strong>{{ leave.balance_leaves }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted">{{ _("No leave balances available") }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Leave Applications -->
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Recent Leave Applications") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if leave_applications %}
+                            <div class="list-group">
+                                {% for leave in leave_applications %}
+                                <div class="list-group-item">
+                                    <h4 class="list-group-item-heading">
+                                        <a href="/desk#Form/Leave Application/{{ leave.name }}">{{ leave.leave_type }}</a>
+                                        <span class="pull-right">
+                                            <span class="indicator {{ leave.indicator }}">{{ leave.status }}</span>
+                                        </span>
+                                    </h4>
+                                    <p class="list-group-item-text">
+                                        {{ frappe.format_date(leave.from_date) }} to {{ frappe.format_date(leave.to_date) }}
+                                        <br>
+                                        <small class="text-muted">{{ leave.total_leave_days }} {{ _("day(s)") }}</small>
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-right" style="margin-top: 10px;">
+                                <a href="/desk#List/Leave Application/List" class="btn btn-sm btn-default">
+                                    {{ _("View All") }}
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-muted">{{ _("No recent leave applications") }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Upcoming Holidays -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Upcoming Holidays") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if holidays %}
+                            <div class="list-group">
+                                {% for holiday in holidays %}
+                                <div class="list-group-item">
+                                    <h4 class="list-group-item-heading">{{ holiday.description }}</h4>
+                                    <p class="list-group-item-text">
+                                        {{ frappe.format_date(holiday.holiday_date) }}
+                                        <br>
+                                        {% if holiday.is_today %}
+                                            <small class="text-success">{{ _("Today") }}</small>
+                                        {% else %}
+                                            <small class="text-muted">{{ holiday.days_away }} {{ _("day(s) away") }}</small>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted">{{ _("No upcoming holidays") }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Attendance and Salary -->
+            <div class="col-md-4">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Attendance Summary") }} <small>({{ month_year }})</small></h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row text-center" style="margin-bottom: 20px;">
+                            <div class="col-xs-3">
+                                <div style="font-size: 24px; font-weight: bold; color: #5cb85c;">
+                                    {{ attendance_summary.present or 0 }}
+                                </div>
+                                <div>{{ _("Present") }}</div>
+                            </div>
+                            <div class="col-xs-3">
+                                <div style="font-size: 24px; font-weight: bold; color: #d9534f;">
+                                    {{ attendance_summary.absent or 0 }}
+                                </div>
+                                <div>{{ _("Absent") }}</div>
+                            </div>
+                            <div class="col-xs-3">
+                                <div style="font-size: 24px; font-weight: bold; color: #5bc0de;">
+                                    {{ attendance_summary.on_leave or 0 }}
+                                </div>
+                                <div>{{ _("On Leave") }}</div>
+                            </div>
+                            <div class="col-xs-3">
+                                <div style="font-size: 24px; font-weight: bold; color: #f0ad4e;">
+                                    {{ attendance_summary.half_day or 0 }}
+                                </div>
+                                <div>{{ _("Half Day") }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <a href="/desk#List/Attendance/List" class="btn btn-sm btn-default">
+                                {{ _("View Attendance") }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Salary Slips -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Recent Salary Slips") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if salary_slips %}
+                            <div class="list-group">
+                                {% for slip in salary_slips %}
+                                <div class="list-group-item">
+                                    <h4 class="list-group-item-heading">
+                                        <a href="/desk#Form/Salary Slip/{{ slip.name }}">{{ slip.name }}</a>
+                                        <span class="pull-right">
+                                            {{ frappe.format_value(slip.net_pay, {"fieldtype": "Currency"}) }}
+                                        </span>
+                                    </h4>
+                                    <p class="list-group-item-text">
+                                        {{ slip.month }} {{ slip.year }}
+                                        <span class="pull-right">
+                                            <span class="indicator {{ slip.indicator }}">{{ slip.status }}</span>
+                                        </span>
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-right" style="margin-top: 10px;">
+                                <a href="/desk#List/Salary Slip/List" class="btn btn-sm btn-default">
+                                    {{ _("View All") }}
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-muted">{{ _("No recent salary slips") }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Performance Review -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ _("Performance Review") }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if appraisals %}
+                            <div class="list-group">
+                                {% for appraisal in appraisals %}
+                                <div class="list-group-item">
+                                    <h4 class="list-group-item-heading">
+                                        <a href="/desk#Form/Appraisal/{{ appraisal.name }}">{{ appraisal.name }}</a>
+                                        <span class="pull-right">
+                                            <span class="indicator {{ appraisal.indicator }}">{{ appraisal.status }}</span>
+                                        </span>
+                                    </h4>
+                                    <p class="list-group-item-text">
+                                        {{ frappe.format_date(appraisal.start_date) }} to {{ frappe.format_date(appraisal.end_date) }}
+                                        {% if appraisal.score %}
+                                        <br>
+                                        <small>{{ _("Score") }}: <strong>{{ appraisal.score }}</strong></small>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted">{{ _("No performance reviews available") }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.employee-portal-page {
+    padding: 20px 0;
+}
+.panel {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.panel-heading {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+.list-group-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.indicator {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+.indicator.green {
+    background-color: #d4f1d4;
+    color: #2e7d32;
+}
+.indicator.red {
+    background-color: #ffd6d6;
+    color: #c62828;
+}
+.indicator.blue {
+    background-color: #d4e6f1;
+    color: #1565c0;
+}
+.indicator.orange {
+    background-color: #fff1d4;
+    color: #ef6c00;
+}
+.indicator.grey {
+    background-color: #e2e2e2;
+    color: #555555;
+}
+</style>
+{% endblock %}
