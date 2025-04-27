@@ -1,0 +1,219 @@
+{% extends "modern/base.html" %}
+
+{% block title %}Message Detail - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .message-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 1.5rem;
+    }
+    
+    .sender-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .avatar-primary {
+        background-color: var(--primary-color);
+    }
+    
+    .message-toolbar {
+        padding: 1rem;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .btn-toolbar-item {
+        font-size: 0.85rem;
+    }
+    
+    .message-content {
+        padding: 1.5rem;
+    }
+    
+    .message-footer {
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fc;
+        border-top: 1px solid #e3e6f0;
+    }
+    
+    .reply-box {
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Message Detail</h1>
+    <a href="/messages" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Messages
+    </a>
+</div>
+
+<!-- Message Detail Card -->
+<div class="card shadow mb-4">
+    <div class="message-header">
+        <h3 class="h4 mb-3">{{ message.subject }}</h3>
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <div class="sender-avatar avatar-primary">
+                    {{ message.sender[:1] }}
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-1">{{ message.sender }}</h5>
+                <p class="text-muted mb-0">
+                    {{ message.date.strftime('%d %b, %Y at %I:%M %p') }}
+                </p>
+            </div>
+            <div class="ms-auto">
+                <span class="badge bg-primary">{{ message.sender_id }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="message-toolbar">
+        <div class="d-flex flex-wrap">
+            <button class="btn btn-sm btn-outline-primary btn-toolbar-item me-2">
+                <i class="fas fa-reply me-1"></i> Reply
+            </button>
+            <button class="btn btn-sm btn-outline-primary btn-toolbar-item me-2">
+                <i class="fas fa-reply-all me-1"></i> Reply All
+            </button>
+            <button class="btn btn-sm btn-outline-primary btn-toolbar-item me-2">
+                <i class="fas fa-share me-1"></i> Forward
+            </button>
+            <div class="ms-auto">
+                <button class="btn btn-sm btn-outline-danger btn-toolbar-item me-2">
+                    <i class="fas fa-trash me-1"></i> Delete
+                </button>
+                <button class="btn btn-sm btn-outline-secondary btn-toolbar-item">
+                    <i class="fas fa-archive me-1"></i> Archive
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="message-content">
+        <p>{{ message.message }}</p>
+        
+        <div class="reply-box" id="replyBox" style="display: none;">
+            <h6 class="mb-3">Reply to {{ message.sender }}</h6>
+            <div class="mb-3">
+                <textarea class="form-control" rows="5" placeholder="Type your reply here..."></textarea>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-secondary me-2" onclick="toggleReplyBox()">Cancel</button>
+                <button class="btn btn-primary">Send Reply</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="message-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted">
+                    <i class="fas fa-paperclip me-1"></i> No attachments
+                </span>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="toggleReplyBox()">
+                    <i class="fas fa-reply me-1"></i> Reply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Previous Messages in Thread -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Previous Messages in Thread</h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="messagesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="messagesDropdown">
+                <a class="dropdown-item" href="#">View All Messages</a>
+                <a class="dropdown-item" href="#">Mark All as Read</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Delete Thread</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% if message.subject == 'Your monthly performance review is available now' %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">RE: Your monthly performance review is available now</h6>
+                        <small>3 weeks ago</small>
+                    </div>
+                    <p class="small text-muted mb-1">From: You</p>
+                    <p class="mb-1">Thank you for the review. I will go through it and schedule a meeting to discuss the improvements.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">RE: Your monthly performance review is available now</h6>
+                        <small>3 weeks ago</small>
+                    </div>
+                    <p class="small text-muted mb-1">From: HR Manager</p>
+                    <p class="mb-1">Please let me know if you have any questions about your performance review.</p>
+                </a>
+            {% elif message.subject == 'Team meeting scheduled for Monday, 10AM' %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">RE: Team meeting scheduled for Monday, 10AM</h6>
+                        <small>1 day ago</small>
+                    </div>
+                    <p class="small text-muted mb-1">From: You</p>
+                    <p class="mb-1">I will be there. I have prepared the project status report as requested.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">RE: Team meeting scheduled for Monday, 10AM</h6>
+                        <small>1 day ago</small>
+                    </div>
+                    <p class="small text-muted mb-1">From: Team Lead</p>
+                    <p class="mb-1">Great! Looking forward to your report. We will also discuss the new project timeline.</p>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleReplyBox() {
+        const replyBox = document.getElementById('replyBox');
+        if (replyBox.style.display === 'none') {
+            replyBox.style.display = 'block';
+        } else {
+            replyBox.style.display = 'none';
+        }
+    }
+    
+    // Initialize reply button functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const replyButtons = document.querySelectorAll('.btn-outline-primary');
+        replyButtons.forEach(button => {
+            if (button.innerHTML.includes('Reply') && !button.innerHTML.includes('Reply All')) {
+                button.addEventListener('click', toggleReplyBox);
+            }
+        });
+    });
+</script>
+{% endblock %}

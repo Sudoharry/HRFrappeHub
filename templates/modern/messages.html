@@ -1,0 +1,239 @@
+{% extends "modern/base.html" %}
+
+{% block title %}Messages - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .message-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .message-item:hover {
+        background-color: #f8f9fc;
+        transform: translateX(5px);
+    }
+    
+    .message-item.unread {
+        background-color: rgba(78, 115, 223, 0.05);
+        border-left-color: var(--primary-color);
+    }
+    
+    .sender-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+    
+    .avatar-primary {
+        background-color: var(--primary-color);
+    }
+    
+    .avatar-success {
+        background-color: var(--success-color);
+    }
+    
+    .avatar-info {
+        background-color: var(--info-color);
+    }
+    
+    .time-indicator {
+        font-size: 0.8rem;
+        color: #858796;
+    }
+    
+    .message-toolbar {
+        background-color: #f8f9fc;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.35rem;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-toolbar-item {
+        font-size: 0.85rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .message-search {
+        max-width: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Messages</h1>
+    <button class="btn btn-sm btn-primary">
+        <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Compose New Message
+    </button>
+</div>
+
+<!-- Message Toolbar -->
+<div class="message-toolbar d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex mb-2 mb-md-0">
+        <button class="btn btn-sm btn-outline-primary btn-toolbar-item me-2" title="Refresh">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+        <div class="btn-group me-2">
+            <button class="btn btn-sm btn-outline-danger btn-toolbar-item" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary btn-toolbar-item" title="Archive">
+                <i class="fas fa-archive"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary btn-toolbar-item" title="Mark as Read">
+                <i class="fas fa-envelope-open"></i>
+            </button>
+        </div>
+        
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary btn-toolbar-item dropdown-toggle" type="button" id="moreActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                More
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="moreActionsDropdown">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-tag fa-sm me-2"></i>Add Label</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-flag fa-sm me-2"></i>Flag</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-filter fa-sm me-2"></i>Filter Messages</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="message-search">
+        <div class="input-group input-group-sm">
+            <input type="text" class="form-control" placeholder="Search messages...">
+            <button class="btn btn-primary" type="button">
+                <i class="fas fa-search fa-sm"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Messages List -->
+{% if messages %}
+<div class="card shadow mb-4">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for message in messages %}
+            <a href="/messages/view/{{ message.id }}" class="list-group-item list-group-item-action message-item {{ 'unread' if not message.is_read }}">
+                <div class="d-flex w-100">
+                    <div class="me-3">
+                        <div class="sender-avatar avatar-{{ ['primary', 'success', 'info']|random }}">
+                            {{ message.sender[:1] }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ message.subject }}</h5>
+                            <small class="text-muted">{{ message.date.strftime('%d %b, %Y') }}</small>
+                        </div>
+                        <p class="mb-1 text-muted">{{ message.sender }}</p>
+                        <p class="mb-1">{{ message.message }}</p>
+                        <div class="d-flex align-items-center">
+                            <small class="time-indicator">
+                                {% set time_diff = (now - message.date).total_seconds() %}
+                                {% if time_diff < 60 %}
+                                    Just now
+                                {% elif time_diff < 3600 %}
+                                    {{ (time_diff / 60)|int }} minutes ago
+                                {% elif time_diff < 86400 %}
+                                    {{ (time_diff / 3600)|int }} hours ago
+                                {% elif time_diff < 604800 %}
+                                    {{ (time_diff / 86400)|int }} days ago
+                                {% else %}
+                                    {{ message.date.strftime('%d %b, %Y') }}
+                                {% endif %}
+                            </small>
+                            {% if not message.is_read %}
+                                <span class="ms-2 badge bg-primary">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="align-self-center ms-2">
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <div class="mb-3">
+        <i class="fas fa-envelope-open fa-4x text-gray-300"></i>
+    </div>
+    <h4 class="text-gray-500">No messages</h4>
+    <p class="text-gray-500">Your inbox is empty</p>
+    <button class="btn btn-primary mt-2">
+        <i class="fas fa-plus fa-sm me-1"></i> Compose New Message
+    </button>
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if messages|length > 10 %}
+<nav aria-label="Message pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+        </li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item">
+            <a class="page-link" href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Compose Message Modal -->
+<div class="modal fade" id="composeModal" tabindex="-1" aria-labelledby="composeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="composeModalLabel">Compose New Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="recipients" class="form-label">To</label>
+                        <input type="text" class="form-control" id="recipients" placeholder="Enter recipients">
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="subject" placeholder="Enter subject">
+                    </div>
+                    <div class="mb-3">
+                        <label for="messageBody" class="form-label">Message</label>
+                        <textarea class="form-control" id="messageBody" rows="5" placeholder="Type your message here..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize compose modal
+    document.querySelector('.btn-primary').addEventListener('click', function() {
+        const composeModal = new bootstrap.Modal(document.getElementById('composeModal'));
+        composeModal.show();
+    });
+</script>
+{% endblock %}

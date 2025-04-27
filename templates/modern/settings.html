@@ -1,0 +1,544 @@
+{% extends "modern/base.html" %}
+
+{% set active_page = "settings" %}
+
+{% block title %}Settings - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .settings-card .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .settings-section {
+        margin-bottom: 2rem;
+    }
+    
+    .settings-section-title {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .form-switch {
+        padding-left: 2.5em;
+    }
+    
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+    }
+    
+    .profile-pic-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #e3e6f0;
+    }
+    
+    .settings-nav .nav-link {
+        color: var(--dark-color);
+        border-radius: 0;
+        padding: 1rem;
+        border-left: 3px solid transparent;
+    }
+    
+    .settings-nav .nav-link.active {
+        background-color: #f8f9fc;
+        color: var(--primary-color);
+        border-left-color: var(--primary-color);
+    }
+    
+    .settings-nav .nav-link:hover:not(.active) {
+        background-color: #f8f9fc;
+    }
+    
+    .settings-tab-content {
+        min-height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Settings</h1>
+    <button class="btn btn-sm btn-primary" id="saveSettingsBtn">
+        <i class="fas fa-save fa-sm text-white-50 me-1"></i> Save Changes
+    </button>
+</div>
+
+<div class="row">
+    <!-- Settings Navigation -->
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <div class="nav flex-column settings-nav" id="settings-tab" role="tablist" aria-orientation="vertical">
+                    <a class="nav-link active" id="general-tab" data-bs-toggle="pill" href="#general" role="tab" aria-controls="general" aria-selected="true">
+                        <i class="fas fa-cog fa-fw me-2"></i> General Settings
+                    </a>
+                    <a class="nav-link" id="profile-tab" data-bs-toggle="pill" href="#profile" role="tab" aria-controls="profile" aria-selected="false">
+                        <i class="fas fa-user fa-fw me-2"></i> Profile Settings
+                    </a>
+                    <a class="nav-link" id="security-tab" data-bs-toggle="pill" href="#security" role="tab" aria-controls="security" aria-selected="false">
+                        <i class="fas fa-lock fa-fw me-2"></i> Security
+                    </a>
+                    <a class="nav-link" id="notifications-tab" data-bs-toggle="pill" href="#notifications" role="tab" aria-controls="notifications" aria-selected="false">
+                        <i class="fas fa-bell fa-fw me-2"></i> Notifications
+                    </a>
+                    <a class="nav-link" id="appearance-tab" data-bs-toggle="pill" href="#appearance" role="tab" aria-controls="appearance" aria-selected="false">
+                        <i class="fas fa-paint-brush fa-fw me-2"></i> Appearance
+                    </a>
+                    {% if current_user.role == 'HR Manager' or current_user.role == 'Administrator' %}
+                    <a class="nav-link" id="system-tab" data-bs-toggle="pill" href="#system" role="tab" aria-controls="system" aria-selected="false">
+                        <i class="fas fa-server fa-fw me-2"></i> System Settings
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Content -->
+    <div class="col-lg-9">
+        <div class="tab-content settings-tab-content" id="settings-tabContent">
+            <!-- General Settings -->
+            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">General Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">System Preferences</h5>
+                            <div class="mb-3">
+                                <label for="language" class="form-label">Default Language</label>
+                                <select class="form-select" id="language">
+                                    <option value="en">English</option>
+                                    <option value="fr">French</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="de">German</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="timezone" class="form-label">Time Zone</label>
+                                <select class="form-select" id="timezone">
+                                    <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                    <option value="EST">EST (Eastern Standard Time)</option>
+                                    <option value="PST">PST (Pacific Standard Time)</option>
+                                    <option value="IST">IST (Indian Standard Time)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dateFormat" class="form-label">Date Format</label>
+                                <select class="form-select" id="dateFormat">
+                                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Dashboard Settings</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="showAttendanceSummary" checked>
+                                <label class="form-check-label" for="showAttendanceSummary">Show Attendance Summary</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="showLeaveSummary" checked>
+                                <label class="form-check-label" for="showLeaveSummary">Show Leave Summary</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="showPayrollInfo" checked>
+                                <label class="form-check-label" for="showPayrollInfo">Show Payroll Information</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="showUpcomingHolidays" checked>
+                                <label class="form-check-label" for="showUpcomingHolidays">Show Upcoming Holidays</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Settings -->
+            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Profile Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Personal Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" value="{{ current_user.first_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" value="{{ current_user.last_name }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" value="{{ current_user.email }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" value="">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Profile Picture</h5>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <img src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-pic-preview" id="profilePicPreview">
+                                </div>
+                                <div>
+                                    <input type="file" class="form-control mb-2" id="profilePicUpload">
+                                    <button class="btn btn-sm btn-outline-danger" id="removeProfilePic">
+                                        <i class="fas fa-trash me-1"></i> Remove Picture
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Settings -->
+            <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Security Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Password</h5>
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword">
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword">
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword">
+                            </div>
+                            <button class="btn btn-primary">Change Password</button>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Two-Factor Authentication</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="enable2FA">
+                                <label class="form-check-label" for="enable2FA">Enable Two-Factor Authentication</label>
+                            </div>
+                            <p class="text-muted">
+                                Two-factor authentication adds an extra layer of security to your account by requiring more than just a password to sign in.
+                            </p>
+                            <button class="btn btn-outline-primary">Setup Two-Factor Authentication</button>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Session Management</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="rememberLogin" checked>
+                                <label class="form-check-label" for="rememberLogin">Remember login for 30 days</label>
+                            </div>
+                            <button class="btn btn-outline-danger">Sign Out From All Devices</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Settings -->
+            <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Notification Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Email Notifications</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailLeaveUpdates" checked>
+                                <label class="form-check-label" for="emailLeaveUpdates">Leave Application Updates</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailPayrollUpdates" checked>
+                                <label class="form-check-label" for="emailPayrollUpdates">Payroll Updates</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailAttendance" checked>
+                                <label class="form-check-label" for="emailAttendance">Attendance Reminders</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailPerformance" checked>
+                                <label class="form-check-label" for="emailPerformance">Performance Reviews</label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">System Notifications</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="systemLeaveUpdates" checked>
+                                <label class="form-check-label" for="systemLeaveUpdates">Leave Application Updates</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="systemPayrollUpdates" checked>
+                                <label class="form-check-label" for="systemPayrollUpdates">Payroll Updates</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="systemAttendance" checked>
+                                <label class="form-check-label" for="systemAttendance">Attendance Reminders</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="systemPerformance" checked>
+                                <label class="form-check-label" for="systemPerformance">Performance Reviews</label>
+                            </div>
+                        </div>
+                        
+                        {% if current_user.role == 'HR Manager' or current_user.role == 'Administrator' %}
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">HR Notifications</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="hrNewEmployees" checked>
+                                <label class="form-check-label" for="hrNewEmployees">New Employee Registrations</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="hrLeaveApprovals" checked>
+                                <label class="form-check-label" for="hrLeaveApprovals">Leave Approval Requests</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="hrPayrollProcessing" checked>
+                                <label class="form-check-label" for="hrPayrollProcessing">Payroll Processing Alerts</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="hrJobApplications" checked>
+                                <label class="form-check-label" for="hrJobApplications">New Job Applications</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Appearance Settings -->
+            <div class="tab-pane fade" id="appearance" role="tabpanel" aria-labelledby="appearance-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Appearance Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Theme</h5>
+                            <div class="mb-3">
+                                <label class="form-label d-block">Color Scheme</label>
+                                <div class="btn-group" role="group" aria-label="Theme selection">
+                                    <input type="radio" class="btn-check" name="colorScheme" id="lightTheme" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary" for="lightTheme">Light</label>
+                                    
+                                    <input type="radio" class="btn-check" name="colorScheme" id="darkTheme" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="darkTheme">Dark</label>
+                                    
+                                    <input type="radio" class="btn-check" name="colorScheme" id="systemTheme" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="systemTheme">System Default</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Layout</h5>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="compactSidebar">
+                                <label class="form-check-label" for="compactSidebar">Compact Sidebar</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="fixedSidebar" checked>
+                                <label class="form-check-label" for="fixedSidebar">Fixed Sidebar</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="fixedTopbar" checked>
+                                <label class="form-check-label" for="fixedTopbar">Fixed Topbar</label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Accent Color</h5>
+                            <div class="mb-3">
+                                <label class="form-label d-block">Primary Color</label>
+                                <div class="d-flex">
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="accentColor" id="blueAccent" checked>
+                                        <label class="form-check-label" for="blueAccent">
+                                            <div class="rounded-circle bg-primary" style="width: 20px; height: 20px;"></div>
+                                        </label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="accentColor" id="greenAccent">
+                                        <label class="form-check-label" for="greenAccent">
+                                            <div class="rounded-circle bg-success" style="width: 20px; height: 20px;"></div>
+                                        </label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="accentColor" id="purpleAccent">
+                                        <label class="form-check-label" for="purpleAccent">
+                                            <div class="rounded-circle" style="width: 20px; height: 20px; background-color: #6f42c1;"></div>
+                                        </label>
+                                    </div>
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input" type="radio" name="accentColor" id="redAccent">
+                                        <label class="form-check-label" for="redAccent">
+                                            <div class="rounded-circle bg-danger" style="width: 20px; height: 20px;"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Settings (Admin only) -->
+            {% if current_user.role == 'HR Manager' or current_user.role == 'Administrator' %}
+            <div class="tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">System Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Company Information</h5>
+                            <div class="mb-3">
+                                <label for="companyName" class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="companyName" value="ABC Company">
+                            </div>
+                            <div class="mb-3">
+                                <label for="companyLogo" class="form-label">Company Logo</label>
+                                <input type="file" class="form-control" id="companyLogo">
+                            </div>
+                            <div class="mb-3">
+                                <label for="companyAddress" class="form-label">Company Address</label>
+                                <textarea class="form-control" id="companyAddress" rows="3">123 Business Street, Suite 100, Business City, 12345</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">Email Configuration</h5>
+                            <div class="mb-3">
+                                <label for="smtpServer" class="form-label">SMTP Server</label>
+                                <input type="text" class="form-control" id="smtpServer" value="smtp.example.com">
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="smtpPort" class="form-label">SMTP Port</label>
+                                    <input type="number" class="form-control" id="smtpPort" value="587">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="smtpSecurity" class="form-label">Security</label>
+                                    <select class="form-select" id="smtpSecurity">
+                                        <option value="tls">TLS</option>
+                                        <option value="ssl">SSL</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="smtpUsername" class="form-label">SMTP Username</label>
+                                <input type="text" class="form-control" id="smtpUsername" value="notifications@example.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="smtpPassword" class="form-label">SMTP Password</label>
+                                <input type="password" class="form-control" id="smtpPassword" value="********">
+                            </div>
+                            <button class="btn btn-primary">Test Email Configuration</button>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h5 class="settings-section-title">System Maintenance</h5>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i> These actions affect the entire system. Use with caution.
+                            </div>
+                            <div class="d-flex flex-wrap">
+                                <button class="btn btn-outline-secondary me-2 mb-2">
+                                    <i class="fas fa-database me-1"></i> Backup Database
+                                </button>
+                                <button class="btn btn-outline-secondary me-2 mb-2">
+                                    <i class="fas fa-file-export me-1"></i> Export All Data
+                                </button>
+                                <button class="btn btn-outline-secondary me-2 mb-2">
+                                    <i class="fas fa-broom me-1"></i> Clear Cache
+                                </button>
+                                <button class="btn btn-outline-danger me-2 mb-2">
+                                    <i class="fas fa-trash me-1"></i> Reset System
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Profile picture preview
+    document.getElementById('profilePicUpload').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profilePicPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Remove profile picture
+    document.getElementById('removeProfilePic').addEventListener('click', function() {
+        document.getElementById('profilePicPreview').src = 'https://via.placeholder.com/150';
+        document.getElementById('profilePicUpload').value = '';
+    });
+    
+    // Save settings
+    document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+        // Simulate saving settings
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.backgroundColor = '#4e73df';
+        toast.style.color = 'white';
+        toast.style.padding = '15px 25px';
+        toast.style.borderRadius = '4px';
+        toast.style.boxShadow = '0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15)';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = '<i class="fas fa-check-circle me-2"></i> Settings saved successfully!';
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s';
+            setTimeout(function() {
+                document.body.removeChild(toast);
+            }, 500);
+        }, 3000);
+    });
+</script>
+{% endblock %}

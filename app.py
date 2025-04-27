@@ -642,6 +642,355 @@ def my_profile():
                           user=user,
                           reports_to_name=reports_to_name)
 
+# HR Manager Routes
+@app.route('/employees')
+@login_required
+def employees_list():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    employees = Employee.query.all()
+    
+    # Process employees for display
+    employee_list = []
+    for emp in employees:
+        employee_list.append({
+            'id': emp.id,
+            'employee_id': emp.employee_id,
+            'name': emp.employee_name,
+            'email': emp.email,
+            'department': emp.department,
+            'designation': emp.designation,
+            'status': emp.status,
+            'date_of_joining': emp.date_of_joining
+        })
+    
+    return render_template('modern/employees.html', 
+                          employees=employee_list,
+                          active_page='employees',
+                          title='Employees')
+
+@app.route('/attendance/daily-status')
+@login_required
+def attendance_daily_status():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    today = datetime.now().date()
+    attendance_records = Attendance.query.filter_by(attendance_date=today).all()
+    
+    # Get all employees
+    employees = Employee.query.filter_by(status='Active').all()
+    
+    # Process attendance for display
+    attendance_status = []
+    for emp in employees:
+        att_record = next((att for att in attendance_records if att.employee_id == emp.id), None)
+        
+        attendance_status.append({
+            'employee_id': emp.id,
+            'employee_name': emp.employee_name,
+            'department': emp.department,
+            'status': att_record.status if att_record else 'Not Marked',
+            'check_in': att_record.check_in if att_record else None,
+            'check_out': att_record.check_out if att_record else None,
+            'working_hours': att_record.working_hours if att_record else None
+        })
+    
+    return render_template('modern/attendance_daily.html', 
+                          attendance=attendance_status,
+                          today=today.strftime('%Y-%m-%d'),
+                          active_page='attendance',
+                          title='Daily Attendance Status')
+
+@app.route('/leave/pending-approvals')
+@login_required
+def leave_pending_approvals():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    pending_leaves = LeaveApplication.query.filter_by(status='Open').all()
+    
+    # Process leaves for display
+    leave_list = []
+    for leave in pending_leaves:
+        employee = Employee.query.get(leave.employee_id)
+        leave_type = LeaveType.query.get(leave.leave_type_id)
+        
+        leave_list.append({
+            'id': leave.id,
+            'employee_name': employee.employee_name if employee else 'Unknown',
+            'department': employee.department if employee else 'Unknown',
+            'leave_type': leave_type.name if leave_type else 'Unknown',
+            'from_date': leave.from_date,
+            'to_date': leave.to_date,
+            'total_leave_days': leave.total_leave_days,
+            'reason': leave.reason,
+            'status': leave.status
+        })
+    
+    return render_template('modern/leave_pending.html', 
+                          leaves=leave_list,
+                          active_page='leave_management',
+                          title='Pending Leave Approvals')
+
+@app.route('/recruitment/job-openings')
+@login_required
+def job_openings():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    job_openings = JobOpening.query.all()
+    
+    # Process job openings for display
+    jobs_list = []
+    for job in job_openings:
+        department = Department.query.get(job.department_id)
+        applicant_count = JobApplicant.query.filter_by(job_opening_id=job.id).count()
+        
+        jobs_list.append({
+            'id': job.id,
+            'job_title': job.job_title,
+            'department': department.name if department else 'Not Specified',
+            'status': job.status,
+            'applicant_count': applicant_count,
+            'description': job.description,
+            'publish': job.publish
+        })
+    
+    return render_template('modern/job_openings.html', 
+                          jobs=jobs_list,
+                          active_page='recruitment',
+                          title='Job Openings')
+
+@app.route('/payroll/salary-slips')
+@login_required
+def payroll_salary_slips():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    salary_slips = SalarySlip.query.all()
+    
+    # Process salary slips for display
+    slip_list = []
+    for slip in salary_slips:
+        employee = Employee.query.get(slip.employee_id)
+        
+        slip_list.append({
+            'id': slip.id,
+            'employee_name': employee.employee_name if employee else 'Unknown',
+            'department': employee.department if employee else 'Unknown',
+            'month': slip.start_date.strftime('%B'),
+            'year': slip.start_date.year,
+            'start_date': slip.start_date,
+            'end_date': slip.end_date,
+            'posting_date': slip.posting_date,
+            'gross_pay': slip.gross_pay,
+            'total_deduction': slip.total_deduction,
+            'net_pay': slip.net_pay,
+            'status': slip.status
+        })
+    
+    return render_template('modern/payroll_slips.html', 
+                          salary_slips=slip_list,
+                          active_page='payroll',
+                          title='Salary Slips')
+
+@app.route('/performance/appraisals')
+@login_required
+def performance_appraisals():
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('employee_portal'))
+    
+    appraisals = Appraisal.query.all()
+    
+    # Process appraisals for display
+    appraisal_list = []
+    for appraisal in appraisals:
+        employee = Employee.query.get(appraisal.employee_id)
+        
+        appraisal_list.append({
+            'id': appraisal.id,
+            'employee_name': employee.employee_name if employee else 'Unknown',
+            'department': employee.department if employee else 'Unknown',
+            'start_date': appraisal.start_date,
+            'end_date': appraisal.end_date,
+            'status': appraisal.status,
+            'score': appraisal.score,
+            'feedback': appraisal.feedback
+        })
+    
+    return render_template('modern/performance_appraisals.html', 
+                          appraisals=appraisal_list,
+                          active_page='performance',
+                          title='Performance Appraisals')
+
+# Notification Routes
+@app.route('/notifications')
+@login_required
+def notifications_list():
+    # In a real application, this would fetch notifications from a database
+    notifications = [
+        {
+            'id': 1,
+            'title': 'Attendance status updated!',
+            'message': 'Your attendance has been marked as Present for today.',
+            'date': datetime.now() - timedelta(days=2),
+            'is_read': False,
+            'type': 'attendance'
+        },
+        {
+            'id': 2, 
+            'title': 'Leave application approved',
+            'message': 'Your leave application for casual leave has been approved.',
+            'date': datetime.now() - timedelta(days=3),
+            'is_read': True,
+            'type': 'leave'
+        },
+        {
+            'id': 3,
+            'title': 'Payroll processing on 28th April',
+            'message': 'Your salary slip will be processed on 28th April. Please make sure all your attendance records are correct.',
+            'date': datetime.now() - timedelta(days=5),
+            'is_read': False,
+            'type': 'payroll'
+        }
+    ]
+    
+    return render_template('modern/notifications.html', 
+                           notifications=notifications,
+                           title='Notifications')
+
+@app.route('/notifications/view/<int:notification_id>')
+@login_required
+def view_notification(notification_id):
+    # In a real application, this would fetch a specific notification
+    notifications = {
+        1: {
+            'id': 1,
+            'title': 'Attendance status updated!',
+            'message': 'Your attendance has been marked as Present for today.',
+            'date': datetime.now() - timedelta(days=2),
+            'is_read': True,  # Mark as read when viewed
+            'type': 'attendance',
+            'details': 'You have clocked in at 9:00 AM and clocked out at 5:30 PM. Total working hours: 8.5 hours.'
+        },
+        2: {
+            'id': 2, 
+            'title': 'Leave application approved',
+            'message': 'Your leave application for casual leave has been approved.',
+            'date': datetime.now() - timedelta(days=3),
+            'is_read': True,
+            'type': 'leave',
+            'details': 'Your leave application for 2 days of casual leave from 25/04/2025 to 26/04/2025 has been approved by HR Manager.'
+        },
+        3: {
+            'id': 3,
+            'title': 'Payroll processing on 28th April',
+            'message': 'Your salary slip will be processed on 28th April. Please make sure all your attendance records are correct.',
+            'date': datetime.now() - timedelta(days=5),
+            'is_read': True,
+            'type': 'payroll',
+            'details': 'The payroll for April 2025 will be processed on 28th April. Please review your attendance and leave records before 27th April to ensure accuracy.'
+        }
+    }
+    
+    notification = notifications.get(notification_id)
+    if not notification:
+        flash('Notification not found.')
+        return redirect(url_for('notifications_list'))
+    
+    return render_template('modern/notification_detail.html', 
+                           notification=notification,
+                           title='Notification Detail')
+
+# Messages Routes
+@app.route('/messages')
+@login_required
+def messages_list():
+    # In a real application, this would fetch messages from a database
+    messages = [
+        {
+            'id': 1,
+            'sender': 'HR Manager',
+            'sender_id': 1,
+            'subject': 'Your monthly performance review is available now',
+            'message': 'Please check your performance review for the month of March 2025.',
+            'date': datetime.now() - timedelta(hours=1),
+            'is_read': False
+        },
+        {
+            'id': 2,
+            'sender': 'Team Lead',
+            'sender_id': 3,
+            'subject': 'Team meeting scheduled for Monday, 10AM',
+            'message': 'We will discuss the upcoming project timeline and deliverables.',
+            'date': datetime.now() - timedelta(days=2),
+            'is_read': True
+        },
+        {
+            'id': 3,
+            'sender': 'System Administrator',
+            'sender_id': 2,
+            'subject': 'System maintenance scheduled',
+            'message': 'There will be a system maintenance on Sunday, 03:00 AM. The system will be unavailable for approximately 2 hours.',
+            'date': datetime.now() - timedelta(days=4),
+            'is_read': True
+        }
+    ]
+    
+    return render_template('modern/messages.html', 
+                           messages=messages,
+                           title='Messages')
+
+@app.route('/messages/view/<int:message_id>')
+@login_required
+def view_message(message_id):
+    # In a real application, this would fetch a specific message
+    messages = {
+        1: {
+            'id': 1,
+            'sender': 'HR Manager',
+            'sender_id': 1,
+            'subject': 'Your monthly performance review is available now',
+            'message': 'Please check your performance review for the month of March 2025. Your overall score is 4.2/5.0, which is excellent. There are a few areas where you can improve further. Let\'s discuss in our next one-on-one meeting.',
+            'date': datetime.now() - timedelta(hours=1),
+            'is_read': True
+        },
+        2: {
+            'id': 2,
+            'sender': 'Team Lead',
+            'sender_id': 3,
+            'subject': 'Team meeting scheduled for Monday, 10AM',
+            'message': 'We will discuss the upcoming project timeline and deliverables. Please prepare your current project status and any blockers you might be facing. The meeting will be held in the conference room.',
+            'date': datetime.now() - timedelta(days=2),
+            'is_read': True
+        }
+    }
+    
+    message = messages.get(message_id)
+    if not message:
+        flash('Message not found.')
+        return redirect(url_for('messages_list'))
+    
+    return render_template('modern/message_detail.html', 
+                           message=message,
+                           title='Message Detail')
+
+# Settings Routes
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('modern/settings.html',
+                          active_page='settings',
+                          title='Settings')
+
 # API Routes
 @app.route('/api/employee-dashboard-data')
 @login_required

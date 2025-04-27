@@ -1,0 +1,355 @@
+{% extends "modern/base.html" %}
+
+{% set active_page = "employees" %}
+
+{% block title %}Employees - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .employee-actions .dropdown-toggle::after {
+        display: none;
+    }
+    
+    .employee-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+    }
+    
+    .avatar-primary {
+        background-color: var(--primary-color);
+    }
+    
+    .avatar-success {
+        background-color: var(--success-color);
+    }
+    
+    .avatar-info {
+        background-color: var(--info-color);
+    }
+    
+    .avatar-warning {
+        background-color: var(--warning-color);
+    }
+    
+    .employee-card {
+        transition: all 0.3s;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .employee-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .search-bar {
+        max-width: 500px;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+    }
+    
+    .active-status {
+        background-color: rgba(28, 200, 138, 0.1);
+        color: var(--success-color);
+    }
+    
+    .inactive-status {
+        background-color: rgba(231, 74, 59, 0.1);
+        color: var(--danger-color);
+    }
+    
+    .onleave-status {
+        background-color: rgba(246, 194, 62, 0.1);
+        color: var(--warning-color);
+    }
+    
+    .department-filter .btn {
+        border-radius: 1rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        padding: 0.25rem 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Employees</h1>
+    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Add New Employee
+    </a>
+</div>
+
+<!-- Search and Filter Options -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="search-bar input-group">
+                    <input type="text" class="form-control" placeholder="Search employees..." id="employeeSearch">
+                    <button class="btn btn-primary" type="button">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-filter fa-sm me-1"></i> Filter
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                        <li><h6 class="dropdown-header">Status</h6></li>
+                        <li><a class="dropdown-item" href="#" data-filter="status-all">All</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="status-active">Active</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="status-inactive">Inactive</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="status-onleave">On Leave</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Sort By</h6></li>
+                        <li><a class="dropdown-item" href="#" data-sort="name-asc">Name (A-Z)</a></li>
+                        <li><a class="dropdown-item" href="#" data-sort="name-desc">Name (Z-A)</a></li>
+                        <li><a class="dropdown-item" href="#" data-sort="joining-desc">Newest First</a></li>
+                        <li><a class="dropdown-item" href="#" data-sort="joining-asc">Oldest First</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-outline-primary ms-2" type="button" id="exportBtn">
+                    <i class="fas fa-download fa-sm me-1"></i> Export
+                </button>
+            </div>
+        </div>
+        
+        <div class="department-filter mt-3">
+            <h6 class="text-muted mb-2">Filter by Department:</h6>
+            <button class="btn btn-outline-primary active" data-filter="all">All Departments</button>
+            <button class="btn btn-outline-primary" data-filter="Information Technology">IT</button>
+            <button class="btn btn-outline-primary" data-filter="Human Resources">HR</button>
+            <button class="btn btn-outline-primary" data-filter="Finance">Finance</button>
+            <button class="btn btn-outline-primary" data-filter="Marketing">Marketing</button>
+            <button class="btn btn-outline-primary" data-filter="Sales">Sales</button>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Grid View -->
+<div class="row" id="employeeGrid">
+    {% for employee in employees %}
+    <div class="col-xl-3 col-md-4 col-sm-6 mb-4 employee-item" 
+         data-name="{{ employee.name }}" 
+         data-department="{{ employee.department }}" 
+         data-status="{{ employee.status }}">
+        <div class="card employee-card shadow h-100">
+            <div class="card-header py-3 d-flex align-items-center justify-content-between bg-light">
+                <h6 class="m-0 font-weight-bold text-primary">{{ employee.employee_id }}</h6>
+                <div class="dropdown no-arrow employee-actions">
+                    <a class="dropdown-toggle" href="#" role="button" id="employeeMenu{{ loop.index }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in" aria-labelledby="employeeMenu{{ loop.index }}">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user fa-sm fa-fw me-2 text-gray-400"></i>View Profile
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-edit fa-sm fa-fw me-2 text-gray-400"></i>Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-envelope fa-sm fa-fw me-2 text-gray-400"></i>Send Message
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-calendar-alt fa-sm fa-fw me-2 text-gray-400"></i>View Attendance
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-file-alt fa-sm fa-fw me-2 text-gray-400"></i>View Leave
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-money-bill-alt fa-sm fa-fw me-2 text-gray-400"></i>View Salary
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3 mx-auto">
+                    <div class="employee-avatar avatar-{{ ['primary', 'success', 'info', 'warning']|random }} mx-auto">
+                        {{ employee.name[:1] }}
+                    </div>
+                </div>
+                <h5 class="card-title mb-1">{{ employee.name }}</h5>
+                <p class="text-muted small mb-2">{{ employee.designation }}</p>
+                <div class="mb-2">
+                    <span class="status-badge {{ 'active-status' if employee.status == 'Active' else 'inactive-status' if employee.status == 'Inactive' else 'onleave-status' }}">
+                        {{ employee.status }}
+                    </span>
+                </div>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-building fa-sm me-1"></i> {{ employee.department }}
+                </p>
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-envelope fa-sm me-1"></i> {{ employee.email }}
+                </p>
+                <a href="#" class="btn btn-sm btn-outline-primary w-100">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Empty State if no employees -->
+{% if not employees %}
+<div class="text-center py-5 my-5">
+    <div class="mb-3">
+        <i class="fas fa-users fa-4x text-gray-300"></i>
+    </div>
+    <h4 class="text-gray-500">No employees found</h4>
+    <p class="text-gray-500">Try changing your search criteria or add a new employee</p>
+    <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+        <i class="fas fa-plus fa-sm me-1"></i> Add Employee
+    </button>
+</div>
+{% endif %}
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="firstName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" required>
+                                <option value="">Select Department</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Human Resources">Human Resources</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Sales">Sales</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="designation" class="form-label">Designation</label>
+                            <input type="text" class="form-control" id="designation" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="joiningDate" class="form-label">Date of Joining</label>
+                            <input type="date" class="form-control" id="joiningDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="On Leave">On Leave</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveEmployeeBtn">Save Employee</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('employeeSearch').addEventListener('keyup', function() {
+        const searchValue = this.value.toLowerCase();
+        filterEmployees(searchValue);
+    });
+    
+    function filterEmployees(searchValue) {
+        const employeeItems = document.querySelectorAll('.employee-item');
+        
+        employeeItems.forEach(item => {
+            const name = item.getAttribute('data-name').toLowerCase();
+            const department = item.getAttribute('data-department').toLowerCase();
+            
+            if (name.includes(searchValue) || department.includes(searchValue)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    // Department filter
+    document.querySelectorAll('.department-filter .btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.department-filter .btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
+            const employeeItems = document.querySelectorAll('.employee-item');
+            
+            employeeItems.forEach(item => {
+                if (filter === 'all' || item.getAttribute('data-department') === filter) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Modal functionality
+    document.getElementById('saveEmployeeBtn').addEventListener('click', function() {
+        // In a real application, this would send the form data to the server
+        const form = document.getElementById('addEmployeeForm');
+        if (form.checkValidity()) {
+            // Show success message
+            alert('Employee added successfully!');
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+            modal.hide();
+        } else {
+            form.reportValidity();
+        }
+    });
+</script>
+{% endblock %}

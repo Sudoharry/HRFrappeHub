@@ -1,0 +1,208 @@
+{% extends "modern/base.html" %}
+
+{% block title %}Notifications - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .notification-item:hover {
+        background-color: #f8f9fc;
+        transform: translateX(5px);
+    }
+    
+    .notification-item.unread {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+    
+    .notification-item.attendance {
+        border-left-color: var(--primary-color);
+    }
+    
+    .notification-item.leave {
+        border-left-color: var(--success-color);
+    }
+    
+    .notification-item.payroll {
+        border-left-color: var(--warning-color);
+    }
+    
+    .notification-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    .notification-attendance {
+        background-color: var(--primary-color);
+    }
+    
+    .notification-leave {
+        background-color: var(--success-color);
+    }
+    
+    .notification-payroll {
+        background-color: var(--warning-color);
+    }
+    
+    .filter-btn {
+        border-radius: 30px;
+        padding: 0.25rem 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .time-indicator {
+        font-size: 0.8rem;
+        color: #858796;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Notifications</h1>
+    <div>
+        <button class="btn btn-sm btn-primary me-2">
+            <i class="fas fa-check fa-sm text-white-50 me-1"></i> Mark All as Read
+        </button>
+        <button class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-trash fa-sm me-1"></i> Clear All
+        </button>
+    </div>
+</div>
+
+<!-- Filter Options -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <h6 class="text-muted mb-3">Filter by Type:</h6>
+        <div class="d-flex flex-wrap">
+            <button class="filter-btn btn btn-outline-primary active" data-filter="all">All</button>
+            <button class="filter-btn btn btn-outline-primary" data-filter="attendance">Attendance</button>
+            <button class="filter-btn btn btn-outline-primary" data-filter="leave">Leave</button>
+            <button class="filter-btn btn btn-outline-primary" data-filter="payroll">Payroll</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications List -->
+{% if notifications %}
+<div class="card shadow mb-4">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for notification in notifications %}
+            <a href="/notifications/view/{{ notification.id }}" class="list-group-item list-group-item-action notification-item {{ 'unread' if not notification.is_read }} {{ notification.type }}">
+                <div class="d-flex w-100">
+                    <div class="me-3">
+                        <div class="notification-icon notification-{{ notification.type }}">
+                            {% if notification.type == 'attendance' %}
+                                <i class="fas fa-calendar-check"></i>
+                            {% elif notification.type == 'leave' %}
+                                <i class="fas fa-calendar-alt"></i>
+                            {% elif notification.type == 'payroll' %}
+                                <i class="fas fa-money-bill-wave"></i>
+                            {% else %}
+                                <i class="fas fa-bell"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ notification.title }}</h5>
+                            <small class="text-muted">{{ notification.date.strftime('%d %b, %Y') }}</small>
+                        </div>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <div class="d-flex align-items-center">
+                            <small class="time-indicator">
+                                {% set time_diff = (now - notification.date).total_seconds() %}
+                                {% if time_diff < 60 %}
+                                    Just now
+                                {% elif time_diff < 3600 %}
+                                    {{ (time_diff / 60)|int }} minutes ago
+                                {% elif time_diff < 86400 %}
+                                    {{ (time_diff / 3600)|int }} hours ago
+                                {% elif time_diff < 604800 %}
+                                    {{ (time_diff / 86400)|int }} days ago
+                                {% else %}
+                                    {{ notification.date.strftime('%d %b, %Y') }}
+                                {% endif %}
+                            </small>
+                            {% if not notification.is_read %}
+                                <span class="ms-2 badge bg-primary">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="align-self-center ms-2">
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-5">
+    <div class="mb-3">
+        <i class="fas fa-bell-slash fa-4x text-gray-300"></i>
+    </div>
+    <h4 class="text-gray-500">No notifications</h4>
+    <p class="text-gray-500">You're all caught up!</p>
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if notifications|length > 10 %}
+<nav aria-label="Notification pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+        </li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item">
+            <a class="page-link" href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
+            const notificationItems = document.querySelectorAll('.notification-item');
+            
+            notificationItems.forEach(item => {
+                if (filter === 'all' || item.classList.contains(filter)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

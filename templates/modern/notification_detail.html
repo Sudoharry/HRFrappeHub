@@ -1,0 +1,179 @@
+{% extends "modern/base.html" %}
+
+{% block title %}Notification Detail - HR Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 1.5rem;
+    }
+    
+    .notification-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .notification-attendance {
+        background-color: var(--primary-color);
+    }
+    
+    .notification-leave {
+        background-color: var(--success-color);
+    }
+    
+    .notification-payroll {
+        background-color: var(--warning-color);
+    }
+    
+    .notification-content {
+        padding: 1.5rem;
+    }
+    
+    .notification-actions {
+        padding: 1rem 1.5rem;
+        background-color: #f8f9fc;
+        border-top: 1px solid #e3e6f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Notification Detail</h1>
+    <a href="/notifications" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Notifications
+    </a>
+</div>
+
+<!-- Notification Detail Card -->
+<div class="card shadow mb-4">
+    <div class="notification-header">
+        <div class="d-flex">
+            <div class="me-3">
+                <div class="notification-icon notification-{{ notification.type }}">
+                    {% if notification.type == 'attendance' %}
+                        <i class="fas fa-calendar-check"></i>
+                    {% elif notification.type == 'leave' %}
+                        <i class="fas fa-calendar-alt"></i>
+                    {% elif notification.type == 'payroll' %}
+                        <i class="fas fa-money-bill-wave"></i>
+                    {% else %}
+                        <i class="fas fa-bell"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <h3 class="h4 mb-1">{{ notification.title }}</h3>
+                <p class="text-muted mb-0">
+                    {{ notification.date.strftime('%d %b, %Y at %I:%M %p') }}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification-content">
+        <div class="border-bottom pb-3 mb-3">
+            <h5 class="h6 text-primary">Message</h5>
+            <p>{{ notification.message }}</p>
+        </div>
+        
+        <div>
+            <h5 class="h6 text-primary">Details</h5>
+            <p>{{ notification.details }}</p>
+        </div>
+    </div>
+    
+    <div class="notification-actions">
+        <div class="d-flex justify-content-between">
+            <div>
+                <button class="btn btn-sm btn-outline-danger me-2">
+                    <i class="fas fa-trash fa-sm me-1"></i> Delete
+                </button>
+                <button class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-archive fa-sm me-1"></i> Archive
+                </button>
+            </div>
+            
+            {% if notification.type == 'attendance' %}
+            <a href="/view-attendance" class="btn btn-sm btn-primary">
+                <i class="fas fa-calendar-check fa-sm me-1"></i> View Attendance
+            </a>
+            {% elif notification.type == 'leave' %}
+            <a href="/view-leaves" class="btn btn-sm btn-primary">
+                <i class="fas fa-calendar-alt fa-sm me-1"></i> View Leave Applications
+            </a>
+            {% elif notification.type == 'payroll' %}
+            <a href="/view-salary-slips" class="btn btn-sm btn-primary">
+                <i class="fas fa-money-bill-wave fa-sm me-1"></i> View Salary Slips
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Related Notifications -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Related Notifications</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% if notification.type == 'attendance' %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Your attendance for yesterday has been marked</h6>
+                        <small>2 days ago</small>
+                    </div>
+                    <p class="mb-1">Your attendance for Apr 24, 2025 has been marked as Present.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Monthly attendance report is ready</h6>
+                        <small>1 week ago</small>
+                    </div>
+                    <p class="mb-1">Your attendance report for March 2025 is ready to view.</p>
+                </a>
+            {% elif notification.type == 'leave' %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Your leave balance has been updated</h6>
+                        <small>3 days ago</small>
+                    </div>
+                    <p class="mb-1">Your casual leave balance has been updated to 8 days.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Leave policy update</h6>
+                        <small>2 weeks ago</small>
+                    </div>
+                    <p class="mb-1">The company leave policy has been updated. Please review the changes.</p>
+                </a>
+            {% elif notification.type == 'payroll' %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Your salary slip for March 2025 is available</h6>
+                        <small>1 month ago</small>
+                    </div>
+                    <p class="mb-1">Your salary slip for March 2025 has been generated and is ready to view.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Tax declaration reminder</h6>
+                        <small>2 months ago</small>
+                    </div>
+                    <p class="mb-1">Please submit your tax declaration forms before the deadline.</p>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
