@@ -987,6 +987,185 @@ def view_message(message_id):
                            now=datetime.now(),
                            title='Message Detail')
 
+# Attendance Module Additional Routes
+@app.route('/attendance/daily-summary')
+@login_required
+def attendance_daily_summary():
+    # In a real application, this would fetch detailed attendance for today
+    attendance_data = {
+        'date': datetime.now().date(),
+        'total_employees': 54,
+        'present': 48,
+        'absent': 3,
+        'on_leave': 2,
+        'half_day': 1,
+        'attendance_by_department': [
+            {'department': 'Engineering', 'present': 15, 'absent': 1, 'on_leave': 0, 'half_day': 0},
+            {'department': 'HR', 'present': 5, 'absent': 0, 'on_leave': 0, 'half_day': 0},
+            {'department': 'Finance', 'present': 8, 'absent': 0, 'on_leave': 1, 'half_day': 0},
+            {'department': 'Marketing', 'present': 12, 'absent': 1, 'on_leave': 0, 'half_day': 1},
+            {'department': 'Operations', 'present': 8, 'absent': 1, 'on_leave': 1, 'half_day': 0}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='attendance_daily_summary',
+                          title='Daily Attendance Summary',
+                          section='Attendance Management',
+                          subsection='Daily Summary',
+                          data=attendance_data)
+
+@app.route('/attendance/monthly-report')
+@login_required
+def attendance_monthly_report():
+    # In a real application, this would fetch monthly attendance report
+    month = datetime.now().month
+    year = datetime.now().year
+    month_name = datetime.now().strftime('%B')
+    
+    attendance_data = {
+        'month': month_name,
+        'year': year,
+        'total_working_days': 21,
+        'attendance_summary': [
+            {'department': 'Engineering', 'headcount': 16, 'avg_presence': 92},
+            {'department': 'HR', 'headcount': 5, 'avg_presence': 95},
+            {'department': 'Finance', 'headcount': 9, 'avg_presence': 98},
+            {'department': 'Marketing', 'headcount': 14, 'avg_presence': 90},
+            {'department': 'Operations', 'headcount': 10, 'avg_presence': 94}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='attendance_monthly_report',
+                          title='Monthly Attendance Report',
+                          section='Attendance Management',
+                          subsection='Monthly Report',
+                          data=attendance_data)
+
+@app.route('/attendance/upload-bulk')
+@login_required
+def attendance_upload_bulk():
+    # This would be a form to upload bulk attendance
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='attendance_upload_bulk',
+                          title='Upload Bulk Attendance',
+                          section='Attendance Management',
+                          subsection='Bulk Upload')
+
+# Leave Module Additional Routes
+@app.route('/leave/leave-report')
+@login_required
+def leave_report():
+    # In a real application, this would fetch leave report
+    leave_data = {
+        'year': datetime.now().year,
+        'leave_by_type': [
+            {'leave_type': 'Casual Leave', 'total_taken': 142, 'total_employees': 54},
+            {'leave_type': 'Sick Leave', 'total_taken': 87, 'total_employees': 54},
+            {'leave_type': 'Paid Time Off', 'total_taken': 214, 'total_employees': 54},
+            {'leave_type': 'Unpaid Leave', 'total_taken': 12, 'total_employees': 54},
+        ],
+        'leave_by_department': [
+            {'department': 'Engineering', 'headcount': 16, 'casual': 45, 'sick': 28, 'paid': 67, 'unpaid': 3},
+            {'department': 'HR', 'headcount': 5, 'casual': 12, 'sick': 8, 'paid': 21, 'unpaid': 0},
+            {'department': 'Finance', 'headcount': 9, 'casual': 21, 'sick': 15, 'paid': 34, 'unpaid': 2},
+            {'department': 'Marketing', 'headcount': 14, 'casual': 37, 'sick': 22, 'paid': 56, 'unpaid': 5},
+            {'department': 'Operations', 'headcount': 10, 'casual': 27, 'sick': 14, 'paid': 36, 'unpaid': 2}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='leave_report',
+                          title='Leave Report',
+                          section='Leave Management',
+                          subsection='Leave Report',
+                          data=leave_data)
+
+# Payroll Module Additional Routes
+@app.route('/payroll/process-payroll')
+@login_required
+def process_payroll():
+    # This would be a page to process payroll
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    payroll_data = {
+        'month': datetime.now().strftime('%B'),
+        'year': datetime.now().year,
+        'total_employees': 54,
+        'processed': 0,
+        'pending': 54,
+        'total_amount': 0,
+        'departments': [
+            {'name': 'Engineering', 'headcount': 16, 'total_salary': 0, 'status': 'Pending'},
+            {'name': 'HR', 'headcount': 5, 'total_salary': 0, 'status': 'Pending'},
+            {'name': 'Finance', 'headcount': 9, 'total_salary': 0, 'status': 'Pending'},
+            {'name': 'Marketing', 'headcount': 14, 'total_salary': 0, 'status': 'Pending'},
+            {'name': 'Operations', 'headcount': 10, 'total_salary': 0, 'status': 'Pending'}
+        ]
+    }
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='process_payroll',
+                          title='Process Payroll',
+                          section='Payroll Management',
+                          subsection='Process Payroll',
+                          data=payroll_data)
+
+# Recruitment Module Additional Routes
+@app.route('/recruitment/job-openings')
+@login_required
+def recruitment_job_openings():
+    # In a real application, this would fetch job openings
+    job_openings = []
+    for job in JobOpening.query.filter_by(status='Open').all():
+        department = Department.query.get(job.department_id)
+        job_openings.append({
+            'id': job.id,
+            'job_title': job.job_title,
+            'department': department.name if department else 'Unknown',
+            'status': job.status,
+            'applicants_count': JobApplicant.query.filter_by(job_opening_id=job.id).count(),
+            'description': job.description
+        })
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='recruitment_job_openings',
+                          title='Job Openings',
+                          section='Recruitment',
+                          subsection='Job Openings',
+                          jobs=job_openings)
+
+@app.route('/recruitment/job-applicants')
+@login_required
+def recruitment_job_applicants():
+    # In a real application, this would fetch job applicants
+    if current_user.role != 'HR Manager' and current_user.role != 'Administrator':
+        flash('You do not have permission to access this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    applicants = []
+    for applicant in JobApplicant.query.all():
+        job = JobOpening.query.get(applicant.job_opening_id)
+        applicants.append({
+            'id': applicant.id,
+            'name': applicant.applicant_name,
+            'email': applicant.email,
+            'job_title': job.job_title if job else 'Unknown',
+            'status': applicant.status,
+            'resume': applicant.resume,
+            'cover_letter': applicant.cover_letter
+        })
+    
+    return render_template('modern/hr_dashboard.html', 
+                          active_page='recruitment_job_applicants',
+                          title='Job Applicants',
+                          section='Recruitment',
+                          subsection='Job Applicants',
+                          applicants=applicants)
+
 # Settings Routes
 @app.route('/settings')
 @login_required
