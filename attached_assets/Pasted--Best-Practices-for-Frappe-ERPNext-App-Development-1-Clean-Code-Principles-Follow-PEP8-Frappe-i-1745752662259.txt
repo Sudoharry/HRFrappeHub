@@ -1,0 +1,144 @@
+ Best Practices for Frappe/ERPNext App Development
+🧹 1. Clean Code Principles
+Follow PEP8: Frappe is Python-based, so follow PEP8 coding guidelines.
+
+Use Meaningful Names: Name your doctype fields, functions, and variables clearly.
+
+❌ x, y, tmp
+
+✅ total_amount, invoice_date
+
+Keep Functions Short: Ideally under 30–50 lines.
+
+Avoid Hardcoding: Always use constants or configuration files.
+
+🏛️ 2. Modular Structure
+One App = One Business Domain:
+Don't overload one app with unrelated features. (e.g., CRM app ≠ HRMS app)
+
+Apps should be Thin:
+Custom apps should extend Frappe/ERPNext, not duplicate core functionalities unless absolutely needed.
+
+Use Frappe Hooks Properly:
+Always use hooks like on_update, validate, before_insert instead of overriding ERPNext's core methods unnecessarily.
+
+Separation of Concerns:
+
+Controllers: Logic for web views (e.g., website modules).
+
+APIs: For external communication (REST endpoints).
+
+Services: Business logic, heavy calculations.
+
+Models: Only database structure, simple model logic.
+
+📚 3. Documentation Standards
+DocTypes should have Descriptions:
+
+Fill "Description" fields in DocTypes properly to help future developers.
+
+Code Comments:
+
+Explain why something is done, not what is done (what is obvious from code).
+
+README Files:
+
+Every app should have a clear README.md with:
+
+Purpose
+
+Installation
+
+Usage
+
+Developer notes
+
+Changelog / Versioning:
+
+Keep CHANGELOG.md for every major update.
+
+Semantic Versioning (e.g., v1.2.3) is recommended.
+
+🔄 4. API and Integration Best Practices
+Keep APIs Stateless:
+Each request should not depend on previous requests unless using OAuth/token sessions.
+
+Use Frappe’s REST API Layer:
+
+Avoid building custom APIs unless necessary.
+
+Always validate permissions (frappe.has_permission) inside APIs.
+
+Rate Limiting:
+
+For public APIs, use Frappe’s frappe.rate_limiter to prevent abuse.
+
+🛠️ 5. Development Workflow
+Use Virtual Environments:
+Never install dependencies globally.
+
+Bench Start Only in Dev:
+Use bench start for development.
+Use Supervisor + Nginx for production deployments.
+
+Use Git Properly:
+
+git init each app.
+
+Branches for features (feature/add-new-invoice-workflow).
+
+PRs for code reviews.
+
+Customizations via Custom App:
+
+Don’t modify ERPNext/Frappe core directly.
+
+Instead, create a new Custom App and override with hooks or patching.
+
+🛡️ 6. Security Best Practices
+Always Validate Input:
+Never trust front-end inputs. Use server-side validation.
+
+Permission Checking:
+Always add permission checks manually in custom API routes.
+
+SQL Injection Protection:
+Use Frappe ORM functions (frappe.db.get_value, frappe.get_doc) instead of raw SQL queries.
+
+🌈 7. UI/UX Standards
+Use Frappe’s Built-in Form Features:
+
+Use Dashboard, Timeline, Comments, Attachments.
+
+Avoid custom HTML unless absolutely needed.
+
+Follow ERPNext UI Conventions:
+Keep UI simple and consistent. Users expect behavior similar to core ERPNext modules.
+
+🧪 8. Testing and QA
+Write Unit Tests:
+
+Use frappe.test_runner for tests.
+
+Target Models, APIs, and Permission Logic.
+
+Test Data:
+
+Use Fixtures for setting up test data automatically.
+
+Continuous Integration:
+
+Use GitHub Actions, GitLab CI, or Jenkins to automate tests.
+
+🔥 9. Optimization Tips
+Use Background Jobs:
+
+For heavy processing, use Frappe’s frappe.enqueue instead of blocking users.
+
+Optimize Database Queries:
+
+Avoid N+1 queries, use joins or optimize DocType relationships.
+
+Use Caching:
+
+Use frappe.cache() where possible to avoid redundant DB calls.
