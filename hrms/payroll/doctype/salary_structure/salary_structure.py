@@ -1,143 +1,173 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+"""
+Salary Structure DocType Controller
+
+This module contains the controller for the Salary Structure DocType
+which handles business logic and validations.
+"""
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, getdate, cint
+from frappe.utils import getdate, flt
 
 class SalaryStructure(Document):
     def validate(self):
-        self.validate_dates()
-        self.validate_salary_components()
-        self.validate_employees()
+        """Validate salary structure"""
+        self.validate_date()
+        self.validate_amount()
+        self.validate_applicable_for()
     
-    def validate_dates(self):
-        if self.from_date and self.to_date and getdate(self.to_date) < getdate(self.from_date):
-            frappe.throw(_("To Date cannot be before From Date"))
+    def validate_date(self):
+        """Validate from_date"""
+        if self.from_date and getdate(self.from_date) > getdate(frappe.utils.today()):
+            frappe.throw(_("From Date cannot be in the future"))
     
-    def validate_salary_components(self):
-        # Ensure there are earnings and deductions
-        if not self.earnings:
-            frappe.throw(_("Earnings table cannot be empty"))
+    def validate_amount(self):
+        """Validate amount"""
+        # Base amount should be greater than 0
+        if flt(self.base_amount) <= 0:
+            frappe.throw(_("Base Amount should be greater than 0"))
         
-        # Validate that component formulas are valid
-        for component in self.earnings + self.deductions:
-            if component.formula:
-                try:
-                    # Just a simple test to see if formula syntax is valid
-                    # In a real implementation, this would evaluate with some test data
-                    salary_component = frappe.get_doc("Salary Component", component.salary_component)
-                    if not salary_component.formula_help:
-                        frappe.msgprint(_("Hint: Check if formula for {0} is correct").format(component.salary_component))
-                except:
-                    frappe.throw(_("Formula syntax error for component {0}").format(component.salary_component))
+        # Check earnings and deductions
+        if hasattr(self, 'earnings') and self.earnings:
+            for earning in self.earnings:
+                if flt(earning.amount) < 0:
+                    frappe.throw(_("Amount cannot be negative for earning {0}").format(earning.salary_component))
+        
+        if hasattr(self, 'deductions') and self.deductions:
+            for deduction in self.deductions:
+                if flt(deduction.amount) < 0:
+                    frappe.throw(_("Amount cannot be negative for deduction {0}").format(deduction.salary_component))
     
-    def validate_employees(self):
-        if self.docstatus != 1:
-            return
-            
-        # Check if already assigned to employees
-        if not self.employees:
-            frappe.msgprint(_("This Salary Structure is not assigned to any employee"))
+    def validate_applicable_for(self):
+        """Validate applicable_for fields"""
+        if self.applicable_for:
+            if self.applicable_for == "Department" and not self.department:
+                frappe.throw(_("Please select Department"))
+            elif self.applicable_for == "Designation" and not self.designation:
+                frappe.throw(_("Please select Designation"))
+            elif self.applicable_for == "Employee Grade" and not self.employee_grade:
+                frappe.throw(_("Please select Employee Grade"))
+            elif self.applicable_for == "Employee" and not self.employee:
+                frappe.throw(_("Please select Employee"))
     
     def on_update(self):
-        self.assign_salary_structure()
+        """On update actions"""
+        # If is_active is checked, ensure all other structures for the same criteria are inactive
+        if self.is_active:
+            self.check_other_active_structures()
     
-    def on_submit(self):
-        self.assign_salary_structure()
-    
-    def on_cancel(self):
-        self.unassign_salary_structure()
-    
-    def assign_salary_structure(self):
-        if self.docstatus != 1 or not self.employees:
-            return
-            
-        for employee in self.employees:
-            # Check if employee exists and is active
-            emp = frappe.db.get_value("Employee", employee.employee, ["status", "company"], as_dict=True)
-            if emp and emp.status == "Active" and emp.company == self.company:
-                # Update employee with this salary structure
-                frappe.db.set_value("Employee", employee.employee, "salary_structure", self.name)
-                
-                # Create or update Salary Structure Assignment
-                existing = frappe.db.exists("Salary Structure Assignment", {
-                    "employee": employee.employee,
-                    "salary_structure": self.name,
-                    "from_date": self.from_date
-                })
-                
-                if existing:
-                    # Update existing assignment
-                    assignment = frappe.get_doc("Salary Structure Assignment", existing)
-                    assignment.base = employee.base
-                    assignment.variable = employee.variable
-                    assignment.from_date = self.from_date
-                    assignment.to_date = self.to_date
-                    assignment.save()
-                else:
-                    # Create new assignment
-                    assignment = frappe.new_doc("Salary Structure Assignment")
-                    assignment.employee = employee.employee
-                    assignment.salary_structure = self.name
-                    assignment.company = self.company
-                    assignment.base = employee.base
-                    assignment.variable = employee.variable
-                    assignment.from_date = self.from_date
-                    assignment.to_date = self.to_date
-                    assignment.save()
-    
-    def unassign_salary_structure(self):
-        if not self.employees:
-            return
-            
-        for employee in self.employees:
-            # Check if employee still has this salary structure
-            if frappe.db.get_value("Employee", employee.employee, "salary_structure") == self.name:
-                frappe.db.set_value("Employee", employee.employee, "salary_structure", "")
-            
-            # Delete or cancel salary structure assignments
-            assignments = frappe.get_all("Salary Structure Assignment", 
-                filters={
-                    "salary_structure": self.name,
-                    "employee": employee.employee
-                }
-            )
-            
-            for assignment in assignments:
-                frappe.delete_doc("Salary Structure Assignment", assignment.name)
-    
-    def get_employees(self):
-        """Get employees based on department, designation, branch, company"""
-        conditions = []
+    def check_other_active_structures(self):
+        """Deactivate other salary structures with the same criteria"""
+        filters = {
+            "name": ("!=", self.name),
+            "is_active": 1
+        }
         
-        if self.company:
-            conditions.append("company = '{0}'".format(self.company))
-        
-        if self.department:
-            conditions.append("department = '{0}'".format(self.department))
+        # Add applicable_for condition
+        if self.applicable_for and self.applicable_for != "All Employees":
+            filters["applicable_for"] = self.applicable_for
             
-        if self.designation:
-            conditions.append("designation = '{0}'".format(self.designation))
-            
-        if self.branch:
-            conditions.append("branch = '{0}'".format(self.branch))
-            
-        # Always get active employees
-        conditions.append("status = 'Active'")
+            if self.applicable_for == "Department" and self.department:
+                filters["department"] = self.department
+            elif self.applicable_for == "Designation" and self.designation:
+                filters["designation"] = self.designation
+            elif self.applicable_for == "Employee Grade" and self.employee_grade:
+                filters["employee_grade"] = self.employee_grade
+            elif self.applicable_for == "Employee" and self.employee:
+                filters["employee"] = self.employee
         
-        condition_str = " AND ".join(conditions)
+        # Find other active structures
+        other_structures = frappe.get_all("Salary Structure", filters=filters)
         
-        employees = frappe.db.sql("""
-            SELECT name, employee_name
-            FROM `tabEmployee`
-            WHERE {0}
-        """.format(condition_str), as_dict=True)
-        
-        return employees
+        # Deactivate them
+        for structure in other_structures:
+            frappe.db.set_value("Salary Structure", structure.name, "is_active", 0)
+            frappe.msgprint(_("Salary Structure {0} has been set as inactive").format(structure.name))
+
+def get_salary_structure(employee, date=None):
+    """Get applicable salary structure for an employee on a given date"""
+    if not date:
+        date = frappe.utils.today()
     
-    def get_employee_base_salary(self, employee):
-        """Get employee's base salary"""
-        # In a real implementation, this would fetch the base salary from current salary
-        # For simplicity, returning a default value
-        return 0
+    # Get employee details
+    employee_details = frappe.db.get_value("Employee", employee, 
+        ["department", "designation", "grade"], as_dict=True)
+    
+    # Find active salary structure for the employee
+    # First try for the specific employee
+    salary_structure = frappe.db.get_value("Salary Structure", {
+        "employee": employee,
+        "is_active": 1,
+        "applicable_for": "Employee",
+        "from_date": ("<=", date)
+    }, "name")
+    
+    if not salary_structure and employee_details.grade:
+        # Try for employee grade
+        salary_structure = frappe.db.get_value("Salary Structure", {
+            "employee_grade": employee_details.grade,
+            "is_active": 1,
+            "applicable_for": "Employee Grade",
+            "from_date": ("<=", date)
+        }, "name")
+    
+    if not salary_structure and employee_details.designation:
+        # Try for designation
+        salary_structure = frappe.db.get_value("Salary Structure", {
+            "designation": employee_details.designation,
+            "is_active": 1,
+            "applicable_for": "Designation",
+            "from_date": ("<=", date)
+        }, "name")
+    
+    if not salary_structure and employee_details.department:
+        # Try for department
+        salary_structure = frappe.db.get_value("Salary Structure", {
+            "department": employee_details.department,
+            "is_active": 1,
+            "applicable_for": "Department",
+            "from_date": ("<=", date)
+        }, "name")
+    
+    if not salary_structure:
+        # Finally try for all employees
+        salary_structure = frappe.db.get_value("Salary Structure", {
+            "applicable_for": "All Employees",
+            "is_active": 1,
+            "from_date": ("<=", date)
+        }, "name")
+    
+    return salary_structure
+
+@frappe.whitelist()
+def make_salary_slip(salary_structure, employee):
+    """Create a salary slip from a salary structure"""
+    # Get the salary structure
+    struct = frappe.get_doc("Salary Structure", salary_structure)
+    
+    # Create a new salary slip
+    salary_slip = frappe.new_doc("Salary Slip")
+    salary_slip.employee = employee
+    salary_slip.employee_name = frappe.db.get_value("Employee", employee, "employee_name")
+    salary_slip.salary_structure = struct.name
+    
+    # Set dates (assuming monthly payroll)
+    import calendar
+    from datetime import datetime
+    
+    today = datetime.now()
+    last_day = calendar.monthrange(today.year, today.month)[1]
+    salary_slip.start_date = today.replace(day=1).strftime('%Y-%m-%d')
+    salary_slip.end_date = today.replace(day=last_day).strftime('%Y-%m-%d')
+    salary_slip.posting_date = frappe.utils.today()
+    
+    # Set company
+    salary_slip.company = struct.company
+    
+    # Set gross pay from base amount
+    salary_slip.gross_pay = struct.base_amount
+    
+    # TODO: Handle earnings and deductions
+    
+    return salary_slip

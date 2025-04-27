@@ -1,180 +1,186 @@
 {
-    "autoname": "SS.#####",
-    "creation": "2023-01-01 00:00:00",
-    "doctype": "DocType",
-    "engine": "InnoDB",
-    "field_order": [
-        "salary_structure_details_section",
-        "name1",
-        "is_active",
-        "company",
-        "column_break_5",
-        "from_date",
-        "to_date",
-        "payroll_frequency",
-        "section_break_8",
-        "earnings",
-        "section_break_13",
-        "deductions",
-        "section_break_15",
-        "total_earning",
-        "total_deduction",
-        "column_break_18",
-        "net_pay",
-        "employees_section",
-        "employees",
-        "amended_from"
-    ],
-    "fields": [
-        {
-            "fieldname": "salary_structure_details_section",
-            "fieldtype": "Section Break",
-            "label": "Salary Structure Details"
-        },
-        {
-            "fieldname": "name1",
-            "fieldtype": "Data",
-            "label": "Name",
-            "reqd": 1
-        },
-        {
-            "default": "1",
-            "fieldname": "is_active",
-            "fieldtype": "Check",
-            "label": "Is Active"
-        },
-        {
-            "fieldname": "company",
-            "fieldtype": "Link",
-            "label": "Company",
-            "options": "Company",
-            "reqd": 1
-        },
-        {
-            "fieldname": "column_break_5",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "from_date",
-            "fieldtype": "Date",
-            "label": "From Date",
-            "reqd": 1
-        },
-        {
-            "fieldname": "to_date",
-            "fieldtype": "Date",
-            "label": "To Date"
-        },
-        {
-            "fieldname": "payroll_frequency",
-            "fieldtype": "Select",
-            "label": "Payroll Frequency",
-            "options": "Monthly\nFortnightly\nBimonthly\nWeekly\nDaily",
-            "reqd": 1
-        },
-        {
-            "fieldname": "section_break_8",
-            "fieldtype": "Section Break",
-            "label": "Earnings"
-        },
-        {
-            "fieldname": "earnings",
-            "fieldtype": "Table",
-            "label": "Earnings",
-            "options": "Salary Detail",
-            "reqd": 1
-        },
-        {
-            "fieldname": "section_break_13",
-            "fieldtype": "Section Break",
-            "label": "Deductions"
-        },
-        {
-            "fieldname": "deductions",
-            "fieldtype": "Table",
-            "label": "Deductions",
-            "options": "Salary Detail"
-        },
-        {
-            "fieldname": "section_break_15",
-            "fieldtype": "Section Break",
-            "label": "Totals"
-        },
-        {
-            "fieldname": "total_earning",
-            "fieldtype": "Currency",
-            "label": "Total Earning",
-            "read_only": 1
-        },
-        {
-            "fieldname": "total_deduction",
-            "fieldtype": "Currency",
-            "label": "Total Deduction",
-            "read_only": 1
-        },
-        {
-            "fieldname": "column_break_18",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "net_pay",
-            "fieldtype": "Currency",
-            "label": "Net Pay",
-            "read_only": 1
-        },
-        {
-            "fieldname": "employees_section",
-            "fieldtype": "Section Break",
-            "label": "Employees"
-        },
-        {
-            "fieldname": "employees",
-            "fieldtype": "Table",
-            "label": "Employees",
-            "options": "Salary Structure Employee"
-        },
-        {
-            "fieldname": "amended_from",
-            "fieldtype": "Link",
-            "label": "Amended From",
-            "no_copy": 1,
-            "options": "Salary Structure",
-            "print_hide": 1,
-            "read_only": 1
-        }
-    ],
-    "is_submittable": 1,
-    "links": [],
-    "modified": "2023-01-01 00:00:00",
-    "module": "Payroll",
-    "name": "Salary Structure",
-    "owner": "Administrator",
-    "permissions": [
-        {
-            "amend": 1,
-            "cancel": 1,
-            "create": 1,
-            "delete": 1,
-            "email": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "HR Manager",
-            "share": 1,
-            "submit": 1,
-            "write": 1
-        },
-        {
-            "email": 1,
-            "print": 1,
-            "read": 1,
-            "report": 1,
-            "role": "HR User",
-            "share": 1
-        }
-    ],
-    "search_fields": "name1,company",
-    "sort_field": "modified",
-    "sort_order": "DESC",
-    "track_changes": 1
+  "name": "Salary Structure",
+  "doctype": "DocType",
+  "module": "Payroll",
+  "description": "Salary structures for employee compensation",
+  "naming_rule": "Expression",
+  "autoname": "field:name",
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "name",
+      "fieldtype": "Data",
+      "label": "Salary Structure Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "from_date",
+      "fieldtype": "Date",
+      "label": "From Date",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payroll_frequency",
+      "fieldtype": "Select",
+      "label": "Payroll Frequency",
+      "options": "Monthly\nFortnightly\nBimonthly\nWeekly\nDaily",
+      "default": "Monthly",
+      "reqd": 1
+    },
+    {
+      "fieldname": "salary_details_section",
+      "fieldtype": "Section Break",
+      "label": "Salary Details"
+    },
+    {
+      "fieldname": "base_amount",
+      "fieldtype": "Currency",
+      "label": "Base Amount",
+      "options": "company:company_currency",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "payment_account",
+      "fieldtype": "Link",
+      "label": "Payment Account",
+      "options": "Account"
+    },
+    {
+      "fieldname": "salary_components_section",
+      "fieldtype": "Section Break",
+      "label": "Salary Components"
+    },
+    {
+      "fieldname": "earnings",
+      "fieldtype": "Table",
+      "label": "Earnings",
+      "options": "Salary Structure Earning"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "deductions",
+      "fieldtype": "Table",
+      "label": "Deductions",
+      "options": "Salary Structure Deduction"
+    },
+    {
+      "fieldname": "applicable_for_section",
+      "fieldtype": "Section Break",
+      "label": "Applicable For"
+    },
+    {
+      "fieldname": "applicable_for",
+      "fieldtype": "Select",
+      "label": "Applicable For",
+      "options": "All Employees\nDepartment\nDesignation\nEmployee Grade\nEmployee"
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Link",
+      "label": "Department",
+      "options": "Department",
+      "depends_on": "eval:doc.applicable_for=='Department'"
+    },
+    {
+      "fieldname": "designation",
+      "fieldtype": "Link",
+      "label": "Designation",
+      "options": "Designation",
+      "depends_on": "eval:doc.applicable_for=='Designation'"
+    },
+    {
+      "fieldname": "employee_grade",
+      "fieldtype": "Link",
+      "label": "Employee Grade",
+      "options": "Employee Grade",
+      "depends_on": "eval:doc.applicable_for=='Employee Grade'"
+    },
+    {
+      "fieldname": "employee",
+      "fieldtype": "Link",
+      "label": "Employee",
+      "options": "Employee",
+      "depends_on": "eval:doc.applicable_for=='Employee'"
+    },
+    {
+      "fieldname": "additional_settings_section",
+      "fieldtype": "Section Break",
+      "label": "Additional Settings"
+    },
+    {
+      "fieldname": "max_benefits",
+      "fieldtype": "Currency",
+      "label": "Maximum Benefits (Amount)",
+      "options": "company:company_currency"
+    },
+    {
+      "fieldname": "column_break_3",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "leave_encashment_amount_per_day",
+      "fieldtype": "Currency",
+      "label": "Leave Encashment Amount Per Day",
+      "options": "company:company_currency"
+    },
+    {
+      "fieldname": "description_section",
+      "fieldtype": "Section Break",
+      "label": "Description"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Text Editor",
+      "label": "Description"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "HR Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "permlevel": 0
+    },
+    {
+      "role": "HR User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "permlevel": 0
+    }
+  ],
+  "search_fields": "name,is_active",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "links": [
+    {
+      "link_doctype": "Salary Slip",
+      "link_fieldname": "salary_structure"
+    }
+  ]
 }

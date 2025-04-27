@@ -1,212 +1,159 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+"""
+Salary Slip DocType Controller
+
+This module contains the controller for the Salary Slip DocType
+which handles business logic and validations.
+"""
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, date_diff, add_days, getdate, cint, get_last_day, get_first_day
+from frappe.utils import getdate, flt, date_diff, add_days, cint, money_in_words, formatdate
 
 class SalarySlip(Document):
     def validate(self):
+        """Validate salary slip"""
         self.validate_dates()
-        self.validate_employee_details()
         self.calculate_net_pay()
+        
+        # Set total in words
+        company_currency = frappe.db.get_value("Company", self.company, "default_currency")
+        self.total_in_words = money_in_words(self.net_pay, company_currency)
     
     def validate_dates(self):
-        if getdate(self.end_date) < getdate(self.start_date):
-            frappe.throw(_("End date cannot be before start date"))
-            
-        if getdate(self.start_date) > getdate():
-            frappe.throw(_("Future dates not allowed in salary slip"))
-    
-    def validate_employee_details(self):
-        # Get employee details
-        emp = frappe.db.get_value("Employee", self.employee, 
-            ["status", "date_of_joining", "relieving_date"], as_dict=True)
-            
-        if not emp:
-            frappe.throw(_("Employee {0} does not exist").format(self.employee))
-            
-        if emp.status == "Left" or emp.status == "Inactive":
-            frappe.throw(_("Cannot create salary slip for inactive employee {0}").format(self.employee_name))
-            
-        if getdate(emp.date_of_joining) > getdate(self.start_date):
-            frappe.throw(_("Employee joined after this payroll period"))
-            
-        if emp.relieving_date and getdate(emp.relieving_date) < getdate(self.end_date):
-            frappe.throw(_("Employee has left before the end of this payroll period"))
-    
-    def on_submit(self):
-        self.update_status(self.name)
+        """Validate salary slip dates"""
+        # Start date should be before end date
+        if self.start_date and self.end_date and getdate(self.start_date) > getdate(self.end_date):
+            frappe.throw(_("Start Date cannot be after End Date"))
         
-        # Create salary payment entry if auto-payment is enabled
-        if self.get_auto_payment_setting():
-            self.create_payment_entry()
+        # End date should not be in the future
+        if self.end_date and getdate(self.end_date) > getdate(frappe.utils.today()):
+            frappe.msgprint(_("End Date is in the future. It should be less than or equal to today's date."))
+        
+        # Calculate total working days if not set
+        if not self.total_working_days:
+            self.calculate_total_working_days()
+        
+        # Calculate payment days if not set
+        if not self.payment_days:
+            self.payment_days = self.total_working_days - self.leave_without_pay - self.absent_days
     
-    def on_cancel(self):
-        self.update_status()
+    def calculate_total_working_days(self):
+        """Calculate total working days for the pay period"""
+        days = date_diff(self.end_date, self.start_date) + 1
+        self.total_working_days = days
     
     def calculate_net_pay(self):
-        # Calculate totals for earnings and deductions
-        self.total_earning = 0
-        self.total_deduction = 0
+        """Calculate total earnings, deductions, and net pay"""
+        # Calculate total earnings
+        if not self.gross_pay:
+            gross_pay = 0
+            if hasattr(self, 'earnings') and self.earnings:
+                for earning in self.earnings:
+                    gross_pay += flt(earning.amount)
+            self.gross_pay = gross_pay
         
-        # Add up earnings
-        for earning in self.earnings:
-            self.total_earning += flt(earning.amount)
-        
-        # Add up deductions
-        for deduction in self.deductions:
-            self.total_deduction += flt(deduction.amount)
+        # Calculate total deductions
+        total_deduction = 0
+        if hasattr(self, 'deductions') and self.deductions:
+            for deduction in self.deductions:
+                total_deduction += flt(deduction.amount)
+        self.total_deduction = total_deduction
         
         # Calculate net pay
-        self.net_pay = self.total_earning - self.total_deduction
+        self.net_pay = flt(self.gross_pay) - flt(self.total_deduction)
         
-        # Round to nearest integer if configured
-        if frappe.db.get_single_value("Payroll Settings", "round_off_to_nearest_integer"):
-            self.net_pay = round(self.net_pay)
+        # Set rounded total
+        self.rounded_total = round(self.net_pay)
     
-    def make_salary_slip_from_salary_structure(self):
-        """Get salary structure and create salary slip"""
-        if not self.salary_structure:
-            frappe.throw(_("Please select a salary structure for employee {0}").format(self.employee_name))
-            
-        # Get salary structure
-        salary_structure = frappe.get_doc("Salary Structure", self.salary_structure)
+    def on_submit(self):
+        """Actions when salary slip is submitted"""
+        # Check minimum validations
+        if not self.net_pay:
+            frappe.throw(_("Net Pay cannot be zero"))
         
-        # Get employee assignment details
-        assignment = self.get_salary_structure_assignment()
-        if not assignment:
-            frappe.throw(_("No active Salary Structure Assignment for employee {0} in this period")
-                .format(self.employee_name))
-        
-        # Get start and end dates
-        if not self.start_date:
-            self.start_date = get_first_day(self.posting_date)
-        if not self.end_date:
-            self.end_date = get_last_day(self.posting_date)
-        
-        # Clear existing tables
-        self.earnings = []
-        self.deductions = []
-        
-        # Fill earnings and deductions from structure
-        for component in salary_structure.earnings:
-            self.add_component(component, "earnings", assignment)
-            
-        for component in salary_structure.deductions:
-            self.add_component(component, "deductions", assignment)
-            
-        # Calculate totals
-        self.calculate_net_pay()
+        # Update related records or perform any other post-submission tasks
+        self.update_status("Submitted")
     
-    def add_component(self, component, component_type, assignment):
-        """Add salary component to earnings or deductions table"""
-        amount = self.calculate_component_amount(component, assignment)
-        
-        if amount != 0:
-            row = self.append(component_type)
-            row.salary_component = component.salary_component
-            row.amount = amount
+    def on_cancel(self):
+        """Actions when salary slip is cancelled"""
+        self.update_status("Cancelled")
     
-    def calculate_component_amount(self, component, assignment):
-        """Calculate amount for a salary component based on formula or fixed amount"""
-        # For simplicity - in a real implementation, this would evaluate component formula
-        # with variables for base, variable pay, gross pay, etc.
-        if component.formula:
-            # Base formula calculation - in real implementation, this would be more complex
-            # and handle variables like base pay, attendance, etc.
-            amount = assignment.base * (flt(component.amount) / 100)
-        else:
-            amount = flt(component.amount)
-            
-        return amount
+    def update_status(self, status):
+        """Update the status of the salary slip"""
+        self.db_set("status", status)
+        frappe.db.commit()
+
+@frappe.whitelist()
+def make_bank_entry(salary_slips):
+    """Create bank entry from salary slips"""
+    if isinstance(salary_slips, str):
+        import json
+        salary_slips = json.loads(salary_slips)
     
-    def get_salary_structure_assignment(self):
-        """Get active salary structure assignment for the employee and date"""
-        assignments = frappe.db.sql("""
-            SELECT * FROM `tabSalary Structure Assignment`
-            WHERE employee=%s AND salary_structure=%s
-            AND docstatus=1
-            AND (from_date <= %s OR from_date <= '0000-00-00')
-            AND (to_date >= %s OR to_date IS NULL OR to_date = '0000-00-00')
-        """, (self.employee, self.salary_structure, self.start_date, self.end_date), as_dict=True)
-        
-        return assignments[0] if assignments else None
+    if not salary_slips:
+        frappe.throw(_("No salary slip selected"))
     
-    def get_auto_payment_setting(self):
-        """Check if auto payment is enabled in payroll settings"""
-        return frappe.db.get_single_value("Payroll Settings", "auto_create_payment_entry")
+    # Fetch salary slips
+    salary_slip_list = []
+    for slip in salary_slips:
+        if slip.get('name'):
+            salary_slip = frappe.get_doc("Salary Slip", slip.get('name'))
+            if salary_slip.docstatus != 1:
+                frappe.throw(_("Salary Slip {0} must be submitted").format(salary_slip.name))
+            salary_slip_list.append(salary_slip)
     
-    def create_payment_entry(self):
-        """Create payment entry for salary payment"""
-        # This would be a complex method creating actual payment entries
-        # in a real implementation. For simplicity, we're just showing a placeholder.
-        frappe.msgprint(_("Payment entry for salary would be created here"))
+    if not salary_slip_list:
+        frappe.throw(_("No salary slips found"))
     
-    def update_status(self, slip_name=None):
-        """Update status of salary slip"""
-        paid = "Paid" if self.docstatus == 1 else None
-        status = "Submitted" if self.docstatus == 1 else "Draft" if self.docstatus == 0 else "Cancelled"
-        
-        slip_name = slip_name or self.name
-        
-        frappe.db.set_value("Salary Slip", slip_name, {
-            "paid": paid,
-            "status": status
-        })
+    # Create a simple dictionary with payment details
+    # In a real implementation, this would create an actual payment entry
+    total_amount = sum(slip.net_pay for slip in salary_slip_list)
     
-    def process_scheduled_salary_slips():
-        """Scheduled task to create salary slips"""
-        # This is a method that would be called by scheduler
-        # to auto-generate salary slips based on salary structures
-        # We'll just define the basic structure
-        
-        # Get current month's start and end dates
-        today = getdate()
-        first_day = get_first_day(today)
-        last_day = get_last_day(today)
-        
-        # Find all active salary structure assignments
-        assignments = frappe.db.sql("""
-            SELECT 
-                ssa.employee, ssa.employee_name, ssa.salary_structure
-            FROM 
-                `tabSalary Structure Assignment` ssa
-            JOIN 
-                `tabEmployee` emp ON ssa.employee = emp.name
-            WHERE 
-                ssa.docstatus = 1 
-                AND emp.status = 'Active'
-                AND (ssa.from_date <= %s OR ssa.from_date <= '0000-00-00')
-                AND (ssa.to_date >= %s OR ssa.to_date IS NULL OR ssa.to_date = '0000-00-00')
-                AND NOT EXISTS (
-                    SELECT name FROM `tabSalary Slip` 
-                    WHERE employee = ssa.employee 
-                    AND start_date = %s 
-                    AND end_date = %s 
-                    AND docstatus != 2
-                )
-        """, (last_day, first_day, first_day, last_day), as_dict=True)
-        
-        # Create salary slips for each employee
-        for assignment in assignments:
-            try:
-                salary_slip = frappe.new_doc("Salary Slip")
-                salary_slip.employee = assignment.employee
-                salary_slip.employee_name = assignment.employee_name
-                salary_slip.salary_structure = assignment.salary_structure
-                salary_slip.start_date = first_day
-                salary_slip.end_date = last_day
-                salary_slip.posting_date = today
-                
-                # Make salary slip from structure
-                salary_slip.make_salary_slip_from_salary_structure()
-                
-                salary_slip.insert()
-                
-                # Auto-submit if configured
-                if frappe.db.get_single_value("Payroll Settings", "auto_submit_salary_slip"):
-                    salary_slip.submit()
-                    
-            except Exception as e:
-                frappe.log_error(f"Error creating salary slip for {assignment.employee}: {str(e)}")
+    payment_details = {
+        "total_amount": total_amount,
+        "payment_date": frappe.utils.today(),
+        "salary_slips": [slip.name for slip in salary_slip_list],
+        "employees": [slip.employee_name for slip in salary_slip_list]
+    }
+    
+    return payment_details
+
+@frappe.whitelist()
+def get_payment_days(start_date, end_date, employee):
+    """Calculate payment days based on attendance and leave records"""
+    # Convert to date objects
+    start_date = getdate(start_date)
+    end_date = getdate(end_date)
+    
+    # Total calendar days
+    total_days = date_diff(end_date, start_date) + 1
+    
+    # Get leave without pay
+    lwp = frappe.db.sql("""
+        SELECT SUM(total_leave_days) FROM `tabLeave Application`
+        WHERE employee = %s AND status = 'Approved' AND docstatus = 1
+        AND (from_date BETWEEN %s AND %s OR to_date BETWEEN %s AND %s)
+        AND leave_type IN (SELECT name FROM `tabLeave Type` WHERE is_lwp = 1)
+    """, (employee, start_date, end_date, start_date, end_date))
+    
+    lwp = flt(lwp[0][0]) if lwp and lwp[0][0] else 0
+    
+    # Get absent days
+    absent = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabAttendance`
+        WHERE employee = %s AND status = 'Absent' AND docstatus = 1
+        AND attendance_date BETWEEN %s AND %s
+    """, (employee, start_date, end_date))
+    
+    absent = flt(absent[0][0]) if absent and absent[0][0] else 0
+    
+    # Payment days
+    payment_days = total_days - lwp - absent
+    
+    return {
+        "total_working_days": total_days,
+        "leave_without_pay": lwp,
+        "absent_days": absent,
+        "payment_days": payment_days
+    }
