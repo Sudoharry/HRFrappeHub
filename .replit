@@ -1,7 +1,8 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["mariadb"]
 
 [workflows]
 runButton = "Project"
@@ -21,8 +22,8 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bench start --port 5000"
+args = "/home/runner/workspace/.pythonlibs/bin/bench start --port 5000"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "bench start --port 5000"]
+run = ["sh", "-c", "/home/runner/workspace/.pythonlibs/bin/bench start --port 5000"]
