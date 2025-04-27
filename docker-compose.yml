@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hrms-app:latest
+    container_name: hrms-app
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - FLASK_APP=app_frappe.py
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - PYTHONUNBUFFERED=1
+      - FRAPPE_ENV=production
+      - FRAPPE_SITE_NAME=hrms.localhost
+      - DB_HOST=mariadb
+      - DB_NAME=hrms
+      - DB_USER=frappe
+      - DB_PASSWORD=frappe_password
+      - DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RUN_MIGRATIONS=true
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./sites:/app/sites
+      - ./logs:/app/logs
+    networks:
+      - hrms-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/method/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mariadb:
+    image: mariadb:10.6
+    container_name: hrms-mariadb
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-mariadb_root_password}
+      - MYSQL_DATABASE=${DB_NAME:-hrms}
+      - MYSQL_USER=${DB_USER:-frappe}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-frappe_password}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./mariadb-init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - hrms-network
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-mariadb_root_password}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:6-alpine
+    container_name: hrms-redis
+    restart: unless-stopped
+    networks:
+      - hrms-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Only include if migrating from PostgreSQL to MariaDB
+  postgres:
+    image: postgres:13
+    container_name: hrms-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-hrdb}
+      - POSTGRES_USER=${POSTGRES_USER:-hruser}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hrms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hruser} -d ${POSTGRES_DB:-hrdb}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  mariadb-data:
+  redis-data:
+  postgres-data:
+
+networks:
+  hrms-network:
+    driver: bridge
