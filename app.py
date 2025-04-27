@@ -428,6 +428,220 @@ def employee_portal():
     
     return render_template('employee_portal.html', **context)
 
+# Employee feature routes
+@app.route('/apply-leave', methods=['GET', 'POST'])
+@login_required
+def apply_leave():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    leave_types = LeaveType.query.all()
+    
+    if request.method == 'POST':
+        leave_type_id = request.form.get('leave_type_id')
+        from_date = datetime.strptime(request.form.get('from_date'), '%Y-%m-%d').date()
+        to_date = datetime.strptime(request.form.get('to_date'), '%Y-%m-%d').date()
+        reason = request.form.get('reason')
+        
+        # Calculate total leave days (simplified)
+        delta = to_date - from_date
+        total_days = delta.days + 1
+        
+        new_leave = LeaveApplication(
+            employee_id=employee.id,
+            leave_type_id=leave_type_id,
+            from_date=from_date,
+            to_date=to_date,
+            total_leave_days=total_days,
+            reason=reason,
+            status='Open'
+        )
+        
+        db.session.add(new_leave)
+        db.session.commit()
+        
+        flash('Leave application submitted successfully.')
+        return redirect(url_for('view_leaves'))
+    
+    return render_template('apply_leave.html', employee=employee, leave_types=leave_types)
+
+@app.route('/view-leaves')
+@login_required
+def view_leaves():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    leaves = LeaveApplication.query.filter_by(employee_id=employee.id).order_by(LeaveApplication.id.desc()).all()
+    
+    # Process leaves for display
+    leave_list = []
+    for leave in leaves:
+        leave_type = LeaveType.query.get(leave.leave_type_id)
+        leave_list.append({
+            'id': leave.id,
+            'leave_type': leave_type.name if leave_type else 'Unknown',
+            'from_date': leave.from_date,
+            'to_date': leave.to_date,
+            'total_leave_days': leave.total_leave_days,
+            'status': leave.status,
+            'reason': leave.reason,
+            'indicator': 'green' if leave.status == 'Approved' else 'red' if leave.status == 'Rejected' else 'blue'
+        })
+    
+    return render_template('view_leaves.html', leaves=leave_list, employee=employee)
+
+@app.route('/mark-attendance', methods=['GET', 'POST'])
+@login_required
+def mark_attendance():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    today = datetime.now().date()
+    existing_attendance = Attendance.query.filter_by(
+        employee_id=employee.id, 
+        attendance_date=today
+    ).first()
+    
+    if request.method == 'POST':
+        status = request.form.get('status')
+        
+        if existing_attendance:
+            # Update existing attendance
+            existing_attendance.status = status
+            existing_attendance.check_in = datetime.now() if status == 'Present' else None
+            db.session.commit()
+            flash('Attendance updated successfully.')
+        else:
+            # Create new attendance record
+            new_attendance = Attendance(
+                employee_id=employee.id,
+                attendance_date=today,
+                status=status,
+                check_in=datetime.now() if status == 'Present' else None
+            )
+            db.session.add(new_attendance)
+            db.session.commit()
+            flash('Attendance marked successfully.')
+        
+        return redirect(url_for('view_attendance'))
+    
+    return render_template('mark_attendance.html', 
+                          employee=employee, 
+                          today=today.strftime('%Y-%m-%d'),
+                          existing_attendance=existing_attendance)
+
+@app.route('/view-attendance')
+@login_required
+def view_attendance():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    # Get attendance records for the current month
+    now = datetime.now()
+    month_start = datetime(now.year, now.month, 1).date()
+    month_end = (datetime(now.year, now.month+1, 1) - timedelta(days=1)).date() if now.month < 12 else datetime(now.year, 12, 31).date()
+    
+    attendance_records = Attendance.query.filter(
+        Attendance.employee_id == employee.id,
+        Attendance.attendance_date >= month_start,
+        Attendance.attendance_date <= month_end
+    ).order_by(Attendance.attendance_date.desc()).all()
+    
+    # Process attendance for display
+    attendance_list = []
+    for record in attendance_records:
+        attendance_list.append({
+            'id': record.id,
+            'date': record.attendance_date,
+            'status': record.status,
+            'check_in': record.check_in,
+            'check_out': record.check_out,
+            'working_hours': record.working_hours,
+            'indicator': 'green' if record.status == 'Present' else 'red' if record.status == 'Absent' else 'blue'
+        })
+    
+    return render_template('view_attendance.html', 
+                          attendance=attendance_list, 
+                          employee=employee, 
+                          month=now.strftime('%B %Y'))
+
+@app.route('/view-salary-slips')
+@login_required
+def view_salary_slips():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    salary_slips = SalarySlip.query.filter_by(employee_id=employee.id).order_by(SalarySlip.id.desc()).all()
+    
+    # Process salary slips for display
+    slip_list = []
+    for slip in salary_slips:
+        slip_list.append({
+            'id': slip.id,
+            'month': slip.start_date.strftime('%B'),
+            'year': slip.start_date.year,
+            'start_date': slip.start_date,
+            'end_date': slip.end_date,
+            'posting_date': slip.posting_date,
+            'gross_pay': slip.gross_pay,
+            'total_deduction': slip.total_deduction,
+            'net_pay': slip.net_pay,
+            'status': slip.status,
+            'indicator': 'green' if slip.status == 'Paid' else 'blue'
+        })
+    
+    return render_template('view_salary_slips.html', salary_slips=slip_list, employee=employee)
+
+@app.route('/view-salary-slip/<int:slip_id>')
+@login_required
+def view_salary_slip_detail(slip_id):
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    salary_slip = SalarySlip.query.get_or_404(slip_id)
+    
+    # Make sure employee can only view their own salary slip
+    if salary_slip.employee_id != employee.id:
+        flash('You are not authorized to view this salary slip.')
+        return redirect(url_for('view_salary_slips'))
+    
+    return render_template('salary_slip_detail.html', 
+                          slip=salary_slip, 
+                          employee=employee)
+
+@app.route('/my-profile')
+@login_required
+def my_profile():
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not employee:
+        flash('You do not have an associated Employee record.')
+        return redirect(url_for('login'))
+    
+    user = User.query.get(current_user.id)
+    
+    # Get reporting manager if any
+    reports_to_name = None
+    if employee.reports_to:
+        reports_to = Employee.query.get(employee.reports_to)
+        reports_to_name = reports_to.employee_name if reports_to else None
+    
+    return render_template('my_profile.html', 
+                          employee=employee, 
+                          user=user,
+                          reports_to_name=reports_to_name)
+
 # API Routes
 @app.route('/api/employee-dashboard-data')
 @login_required

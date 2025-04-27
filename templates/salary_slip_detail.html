@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slip Detail - HR Management System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .page-header {
+            margin-top: 0;
+        }
+        .salary-slip-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .slip-header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .slip-header h2 {
+            margin-top: 0;
+        }
+        .slip-info-row {
+            margin-bottom: 10px;
+        }
+        .salary-component {
+            margin-bottom: 8px;
+        }
+        .salary-breakdown {
+            border-top: 1px solid #ddd;
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+        .salary-total {
+            border-top: 2px solid #333;
+            margin-top: 15px;
+            padding-top: 15px;
+            font-weight: bold;
+        }
+        .indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .indicator.green {
+            background-color: #5cb85c;
+        }
+        .indicator.blue {
+            background-color: #5bc0de;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .navbar, .no-print, footer {
+                display: none !important;
+            }
+            .salary-slip-container {
+                width: 100%;
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-fixed-top no-print">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">HR Management System</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    {% if current_user.role == 'HR Manager' or current_user.role == 'Administrator' %}
+                    <li><a href="/hr-dashboard">HR Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="/employee-portal">Employee Portal</a></li>
+                    <li><a href="/view-salary-slips">Salary Slips</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if current_user.is_authenticated %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            {{ current_user.first_name }} <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/my-profile">My Profile</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li><a href="/login">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container">
+        <div class="row no-print" style="margin-bottom: 20px;">
+            <div class="col-md-6">
+                <a href="/view-salary-slips" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Back to Salary Slips
+                </a>
+            </div>
+            <div class="col-md-6 text-right">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fa fa-print"></i> Print Salary Slip
+                </button>
+            </div>
+        </div>
+        
+        <div class="salary-slip-container">
+            <div class="slip-header text-center">
+                <h2>ABC Company</h2>
+                <h3>Salary Slip</h3>
+                <p>For the period: {{ slip.start_date.strftime('%d-%m-%Y') }} to {{ slip.end_date.strftime('%d-%m-%Y') }}</p>
+            </div>
+            
+            <div class="row slip-info-row">
+                <div class="col-xs-6">
+                    <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
+                    <p><strong>Employee Name:</strong> {{ employee.employee_name }}</p>
+                </div>
+                <div class="col-xs-6 text-right">
+                    <p><strong>Department:</strong> {{ employee.department }}</p>
+                    <p><strong>Designation:</strong> {{ employee.designation }}</p>
+                </div>
+            </div>
+            
+            <div class="row slip-info-row">
+                <div class="col-xs-6">
+                    <p><strong>Posting Date:</strong> {{ slip.posting_date.strftime('%d-%m-%Y') if slip.posting_date else 'N/A' }}</p>
+                </div>
+                <div class="col-xs-6 text-right">
+                    <p><strong>Status:</strong> <span class="indicator {{ 'green' if slip.status == 'Paid' else 'blue' }}"></span>{{ slip.status }}</p>
+                </div>
+            </div>
+            
+            <div class="row slip-info-row">
+                <div class="col-xs-6">
+                    <p><strong>Working Days:</strong> {{ slip.total_working_days if slip.total_working_days else 'N/A' }}</p>
+                </div>
+            </div>
+            
+            <div class="salary-breakdown">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <h4>Earnings</h4>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Basic Salary</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.gross_pay * 0.6) }}</div>
+                            </div>
+                        </div>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">House Rent Allowance</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.gross_pay * 0.2) }}</div>
+                            </div>
+                        </div>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Special Allowance</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.gross_pay * 0.15) }}</div>
+                            </div>
+                        </div>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Medical Allowance</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.gross_pay * 0.05) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <h4>Deductions</h4>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Income Tax</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.total_deduction * 0.5) }}</div>
+                            </div>
+                        </div>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Provident Fund</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.total_deduction * 0.3) }}</div>
+                            </div>
+                        </div>
+                        <div class="salary-component">
+                            <div class="row">
+                                <div class="col-xs-8">Health Insurance</div>
+                                <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.total_deduction * 0.2) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="salary-total">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <div class="row">
+                            <div class="col-xs-8">Gross Pay</div>
+                            <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.gross_pay) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="row">
+                            <div class="col-xs-8">Total Deductions</div>
+                            <div class="col-xs-4 text-right">${{ '%.2f'|format(slip.total_deduction) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col-xs-8 text-right"><h4>Net Salary</h4></div>
+                    <div class="col-xs-4 text-right"><h4>${{ '%.2f'|format(slip.net_pay) }}</h4></div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 50px; text-align: center;">
+                <p class="text-muted">This is a computer generated salary slip and does not require a signature.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer no-print" style="margin-top: 60px; padding: 20px 0; background-color: #f8f8f8; border-top: 1px solid #e7e7e7;">
+        <div class="container">
+            <p class="text-muted text-center">HR Management System &copy; 2025</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>

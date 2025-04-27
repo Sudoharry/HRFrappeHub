@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - HR Management System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .page-header {
+            margin-top: 0;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            text-align: center;
+            line-height: 150px;
+        }
+        .profile-pic i {
+            font-size: 100px;
+            color: #ccc;
+        }
+        .profile-section {
+            margin-bottom: 30px;
+        }
+        .profile-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .profile-value {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">HR Management System</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    {% if current_user.role == 'HR Manager' or current_user.role == 'Administrator' %}
+                    <li><a href="/hr-dashboard">HR Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="/employee-portal">Employee Portal</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if current_user.is_authenticated %}
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            {{ current_user.first_name }} <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="active"><a href="/my-profile">My Profile</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li><a href="/login">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>My Profile</h1>
+                
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="alert alert-info">
+                    {% for message in messages %}
+                    {{ message }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="profile-header">
+                            <div class="profile-pic">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <h2>{{ employee.employee_name }}</h2>
+                            <p class="text-muted">{{ employee.designation }} - {{ employee.department }}</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="profile-section">
+                                    <h3>Basic Information</h3>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Employee ID</div>
+                                        <div class="col-md-8 profile-value">{{ employee.employee_id }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Full Name</div>
+                                        <div class="col-md-8 profile-value">{{ employee.employee_name }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Email</div>
+                                        <div class="col-md-8 profile-value">{{ employee.email }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Gender</div>
+                                        <div class="col-md-8 profile-value">{{ employee.gender }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Date of Birth</div>
+                                        <div class="col-md-8 profile-value">
+                                            {{ employee.date_of_birth.strftime('%d-%m-%Y') if employee.date_of_birth else 'Not provided' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="profile-section">
+                                    <h3>Employment Details</h3>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Department</div>
+                                        <div class="col-md-8 profile-value">{{ employee.department }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Designation</div>
+                                        <div class="col-md-8 profile-value">{{ employee.designation }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Reports To</div>
+                                        <div class="col-md-8 profile-value">{{ reports_to_name or 'N/A' }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Date of Joining</div>
+                                        <div class="col-md-8 profile-value">
+                                            {{ employee.date_of_joining.strftime('%d-%m-%Y') if employee.date_of_joining else 'Not provided' }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Company</div>
+                                        <div class="col-md-8 profile-value">{{ employee.company }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="profile-section">
+                                    <h3>Account Information</h3>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Username</div>
+                                        <div class="col-md-8 profile-value">{{ user.username }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 profile-label">Role</div>
+                                        <div class="col-md-8 profile-value">{{ user.role }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="profile-section">
+                                    <h3>Quick Actions</h3>
+                                    <div class="row">
+                                        <div class="col-md-6" style="margin-bottom: 10px;">
+                                            <a href="/apply-leave" class="btn btn-default btn-block">
+                                                <i class="fa fa-calendar-plus-o"></i> Apply for Leave
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6" style="margin-bottom: 10px;">
+                                            <a href="/mark-attendance" class="btn btn-default btn-block">
+                                                <i class="fa fa-check-circle"></i> Mark Attendance
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6" style="margin-bottom: 10px;">
+                                            <a href="/view-salary-slips" class="btn btn-default btn-block">
+                                                <i class="fa fa-money"></i> View Salary Slips
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6" style="margin-bottom: 10px;">
+                                            <a href="/view-leaves" class="btn btn-default btn-block">
+                                                <i class="fa fa-list"></i> View Leave Applications
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" style="margin-top: 60px; padding: 20px 0; background-color: #f8f8f8; border-top: 1px solid #e7e7e7;">
+        <div class="container">
+            <p class="text-muted text-center">HR Management System &copy; 2025</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>
